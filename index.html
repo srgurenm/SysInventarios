@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SysInventarios — Sistema de gestión de inventarios de equipos electrónicos universitarios con análisis por IA.">
+  <title>SysInventarios — Acceso</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    body { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+
+    /* Animated background */
+    .bg-orbs { position:fixed; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
+    .orb {
+      position:absolute; border-radius:50%; filter:blur(80px); opacity:0.12;
+      animation: float 8s ease-in-out infinite;
+    }
+    .orb-1 { width:600px;height:600px;background:#6366f1;top:-200px;left:-200px;animation-delay:0s; }
+    .orb-2 { width:400px;height:400px;background:#8b5cf6;bottom:-150px;right:-100px;animation-delay:3s; }
+    .orb-3 { width:300px;height:300px;background:#3b82f6;top:50%;left:60%;animation-delay:5s; }
+    @keyframes float {
+      0%,100%{ transform:translateY(0) scale(1); }
+      50%    { transform:translateY(-30px) scale(1.05); }
+    }
+
+    /* Auth card */
+    .auth-card {
+      position:relative; z-index:1; width:100%; max-width:440px;
+      background:rgba(14,14,26,0.85); border:1px solid var(--border-hover);
+      border-radius:var(--radius-xl); padding:40px;
+      backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+      box-shadow:var(--shadow-xl), var(--shadow-glow);
+    }
+
+    .auth-logo { text-align:center; margin-bottom:32px; }
+    .auth-logo-icon {
+      width:60px; height:60px; background:var(--gradient);
+      border-radius:var(--radius-lg); display:flex; align-items:center;
+      justify-content:center; font-size:1.75rem; margin:0 auto 16px;
+      box-shadow:var(--shadow-glow-lg);
+    }
+    .auth-logo h1 { font-size:1.75rem; }
+    .auth-logo p  { color:var(--text-secondary); font-size:0.9rem; margin-top:6px; }
+
+    /* Tabs */
+    .tab-bar {
+      display:flex; background:var(--bg-primary); border-radius:var(--radius-md);
+      padding:4px; margin-bottom:28px;
+    }
+    .tab-btn {
+      flex:1; padding:9px; border:none; background:none; cursor:pointer;
+      border-radius:calc(var(--radius-md) - 2px); font-family:var(--font);
+      font-size:0.875rem; font-weight:600; color:var(--text-muted);
+      transition:all 0.2s var(--ease);
+    }
+    .tab-btn.active {
+      background:var(--bg-tertiary); color:var(--text-primary);
+      box-shadow:var(--shadow-sm);
+    }
+
+    .form-panel { display:none; }
+    .form-panel.active { display:flex; flex-direction:column; gap:18px; }
+
+    .forgot-link {
+      font-size:0.8rem; color:var(--indigo-light); text-align:right; cursor:pointer;
+    }
+    .forgot-link:hover { color:var(--text-primary); }
+
+    .auth-divider {
+      display:flex; align-items:center; gap:12px; color:var(--text-muted);
+      font-size:0.8rem; margin:4px 0;
+    }
+    .auth-divider::before,.auth-divider::after {
+      content:''; flex:1; height:1px; background:var(--border);
+    }
+
+    .input-group { position:relative; }
+    .input-icon {
+      position:absolute; left:14px; top:50%; transform:translateY(-50%);
+      color:var(--text-muted); font-size:1rem; pointer-events:none;
+    }
+    .input-group .form-input { padding-left:42px; }
+    .pw-toggle {
+      position:absolute; right:14px; top:50%; transform:translateY(-50%);
+      background:none; border:none; cursor:pointer; color:var(--text-muted);
+      font-size:1rem; padding:2px; transition:color 0.2s;
+    }
+    .pw-toggle:hover { color:var(--text-primary); }
+  </style>
+</head>
+<body>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="auth-card fade-in">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🖥️</div>
+      <h1 class="gradient-text">SysInventarios</h1>
+      <p>Gestión inteligente de equipos universitarios</p>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-login"   onclick="switchTab('login')">Iniciar Sesión</button>
+      <button class="tab-btn"        id="tab-register" onclick="switchTab('register')">Crear Cuenta</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="form-panel active" id="panel-login">
+      <div class="form-group">
+        <label class="form-label required">Correo electrónico</label>
+        <div class="input-group">
+          <span class="input-icon">✉️</span>
+          <input type="email" id="login-email" class="form-input" placeholder="tu@correo.com" autocomplete="email">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label required">Contraseña</label>
+        <div class="input-group">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="login-pw" class="form-input" placeholder="••••••••" autocomplete="current-password">
+          <button class="pw-toggle" onclick="togglePw('login-pw',this)" tabindex="-1">👁️</button>
+        </div>
+        <span class="forgot-link" onclick="handleForgot()">¿Olvidaste tu contraseña?</span>
+      </div>
+      <button class="btn btn-primary btn-xl btn-full" id="btn-login" onclick="handleLogin()">
+        Iniciar Sesión
+      </button>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="form-panel" id="panel-register">
+      <div class="form-group">
+        <label class="form-label required">Nombre completo</label>
+        <div class="input-group">
+          <span class="input-icon">👤</span>
+          <input type="text" id="reg-name" class="form-input" placeholder="Juan Pérez" autocomplete="name">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label required">Correo electrónico</label>
+        <div class="input-group">
+          <span class="input-icon">✉️</span>
+          <input type="email" id="reg-email" class="form-input" placeholder="tu@correo.com" autocomplete="email">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label required">Contraseña</label>
+        <div class="input-group">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="reg-pw" class="form-input" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+          <button class="pw-toggle" onclick="togglePw('reg-pw',this)" tabindex="-1">👁️</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label required">Confirmar contraseña</label>
+        <div class="input-group">
+          <span class="input-icon">🔐</span>
+          <input type="password" id="reg-pw2" class="form-input" placeholder="Repite la contraseña" autocomplete="new-password">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-xl btn-full" id="btn-register" onclick="handleRegister()">
+        Crear Cuenta
+      </button>
+    </div>
+  </div>
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    // Redirect if already logged in
+    redirectIfLoggedIn('app.html');
+
+    // ── TAB SWITCH ────────────────────────────────────────
+    function switchTab(tab) {
+      document.getElementById('panel-login').classList.toggle('active',    tab === 'login');
+      document.getElementById('panel-register').classList.toggle('active', tab === 'register');
+      document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
+      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+    }
+
+    // ── TOGGLE PASSWORD ───────────────────────────────────
+    function togglePw(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isText = input.type === 'text';
+      input.type = isText ? 'password' : 'text';
+      btn.textContent = isText ? '👁️' : '🙈';
+    }
+
+    // ── LOGIN ─────────────────────────────────────────────
+    async function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const pw    = document.getElementById('login-pw').value;
+      if (!email || !pw) { showToast('Completa todos los campos.', 'warning'); return; }
+
+      const btn = document.getElementById('btn-login');
+      btn.classList.add('loading'); btn.disabled = true;
+      try {
+        await auth.signInWithEmailAndPassword(email, pw);
+        window.location.href = 'app.html';
+      } catch (err) {
+        const msgs = {
+          'auth/user-not-found':   'No existe cuenta con ese correo.',
+          'auth/wrong-password':   'Contraseña incorrecta.',
+          'auth/invalid-email':    'Correo inválido.',
+          'auth/too-many-requests':'Demasiados intentos. Intenta más tarde.',
+        };
+        showToast(msgs[err.code] || err.message, 'error');
+      } finally {
+        btn.classList.remove('loading'); btn.disabled = false;
+      }
+    }
+
+    // ── REGISTER ──────────────────────────────────────────
+    async function handleRegister() {
+      const name  = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const pw    = document.getElementById('reg-pw').value;
+      const pw2   = document.getElementById('reg-pw2').value;
+
+      if (!name || !email || !pw || !pw2) { showToast('Completa todos los campos.', 'warning'); return; }
+      if (pw !== pw2)  { showToast('Las contraseñas no coinciden.', 'warning'); return; }
+      if (pw.length < 6){ showToast('La contraseña debe tener al menos 6 caracteres.', 'warning'); return; }
+
+      const btn = document.getElementById('btn-register');
+      btn.classList.add('loading'); btn.disabled = true;
+      try {
+        const { user } = await auth.createUserWithEmailAndPassword(email, pw);
+        await user.updateProfile({ displayName: name });
+        window.location.href = 'app.html';
+      } catch (err) {
+        const msgs = {
+          'auth/email-already-in-use': 'Ya existe una cuenta con ese correo.',
+          'auth/invalid-email':        'Correo inválido.',
+          'auth/weak-password':        'Contraseña demasiado débil.',
+        };
+        showToast(msgs[err.code] || err.message, 'error');
+      } finally {
+        btn.classList.remove('loading'); btn.disabled = false;
+      }
+    }
+
+    // ── FORGOT ───────────────────────────────────────────
+    async function handleForgot() {
+      const email = document.getElementById('login-email').value.trim();
+      if (!email) { showToast('Escribe tu correo arriba primero.', 'warning'); return; }
+      try {
+        await auth.sendPasswordResetEmail(email);
+        showToast('Email de recuperación enviado. Revisa tu bandeja.', 'success');
+      } catch (err) {
+        showToast('No se pudo enviar el email.', 'error');
+      }
+    }
+
+    // ── ENTER KEY ────────────────────────────────────────
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      const loginPanel = document.getElementById('panel-login');
+      if (loginPanel.classList.contains('active')) handleLogin();
+      else handleRegister();
+    });
+  </script>
+</body>
+</html>

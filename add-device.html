@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agregar Equipo — SysInventarios</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    /* Upload Zone */
+    .upload-zone {
+      border: 2px dashed var(--border-hover); border-radius: var(--radius-lg);
+      padding: 40px 24px; text-align: center; cursor: pointer;
+      transition: all 0.2s var(--ease); background: var(--bg-card);
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--indigo); background: rgba(99,102,241,0.06);
+      box-shadow: var(--shadow-glow);
+    }
+    .upload-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-zone-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .upload-zone h3 { font-size: 1rem; margin-bottom: 6px; }
+    .upload-zone p  { font-size: 0.825rem; color: var(--text-secondary); }
+
+    /* Image previews */
+    .img-previews { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+    .img-thumb {
+      position: relative; width: 100px; height: 100px;
+      border-radius: var(--radius-md); overflow: hidden;
+      border: 2px solid var(--border);
+    }
+    .img-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .img-thumb .remove-btn {
+      position: absolute; top: 4px; right: 4px; width: 22px; height: 22px;
+      background: rgba(0,0,0,0.7); border: none; border-radius: 50%;
+      color: #fff; cursor: pointer; font-size: 0.75rem; display: flex;
+      align-items: center; justify-content: center; line-height: 1;
+    }
+
+    /* AI Panel */
+    .ai-panel {
+      background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.25);
+      border-radius: var(--radius-lg); padding: 20px; margin-top: 20px;
+    }
+    .ai-panel-header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+    }
+    .ai-label { font-size: 0.7rem; background: rgba(99,102,241,0.2); color: var(--indigo-light); padding: 2px 10px; border-radius: var(--radius-full); }
+
+    /* Questions banner */
+    .questions-banner {
+      background: var(--warning-bg); border: 1px solid rgba(245,158,11,0.3);
+      border-radius: var(--radius-md); padding: 16px 20px;
+    }
+    .questions-banner h4 { color: var(--warning); margin-bottom: 10px; font-size: 0.9rem; }
+    .questions-banner ul { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+    .questions-banner li { font-size: 0.875rem; color: var(--text-secondary); }
+
+    /* Confidence bar */
+    .conf-bar { height: 6px; background: var(--border); border-radius: var(--radius-full); overflow: hidden; }
+    .conf-fill { height: 100%; background: var(--gradient); border-radius: var(--radius-full); transition: width 0.6s var(--ease); }
+
+    /* Section card */
+    .section-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px;
+    }
+    .section-title { font-size: 1rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">🖥️</div>
+      <div>
+        <div class="sidebar-brand-name">SysInventarios</div>
+        <div class="sidebar-brand-sub">Panel de Control</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-title">Navegación</div>
+      <a href="app.html"     class="sidebar-link"><span class="icon">📦</span> Mis Inventarios</a>
+      <a href="#" id="link-back-inv" class="sidebar-link"><span class="icon">📋</span> Inventario</a>
+      <div class="sidebar-section-title" style="margin-top:16px">Cuenta</div>
+      <button class="sidebar-link" onclick="handleLogout()"><span class="icon">🚪</span> Cerrar Sesión</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div>
+          <div class="user-name"  id="user-name">Cargando...</div>
+          <div class="user-email" id="user-email"></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main -->
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <button class="hamburger btn btn-ghost btn-icon" id="hamburger">☰</button>
+        <a href="#" id="back-link" class="btn btn-ghost btn-sm" style="padding:4px 10px;margin-bottom:6px;display:inline-flex;">← Volver al Inventario</a>
+        <h1 class="page-title" id="page-title">Agregar Equipo</h1>
+        <p class="page-subtitle">Sube hasta 4 imágenes del dispositivo y deja que la IA extraiga los datos.</p>
+      </div>
+    </div>
+
+    <!-- STEP 1: Upload Images -->
+    <div class="section-card">
+      <div class="section-title">📷 Paso 1 — Imágenes del Dispositivo</div>
+
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" multiple>
+        <div class="upload-zone-icon">🖼️</div>
+        <h3>Arrastra las imágenes aquí</h3>
+        <p>o haz clic para seleccionar · JPG, PNG, WebP · Máximo 4 imágenes · 8MB c/u</p>
+      </div>
+
+      <div class="img-previews" id="img-previews"></div>
+
+      <div style="margin-top:20px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <button class="btn btn-primary btn-lg" id="btn-analyze" onclick="handleAnalyze()" disabled>
+          🤖 Analizar con IA
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="clearImages()">🗑️ Limpiar imágenes</button>
+        <span id="img-count-label" class="text-muted text-sm"></span>
+      </div>
+    </div>
+
+    <!-- AI Results Panel (hidden until analyzed) -->
+    <div class="ai-panel" id="ai-panel" style="display:none">
+      <div class="ai-panel-header">
+        <span style="font-size:1.25rem">🤖</span>
+        <h3 style="font-size:1rem;font-weight:700;">Resultados del Análisis</h3>
+        <span class="ai-label">Gemini Vision</span>
+        <span id="ai-confidence-label" class="text-muted text-sm" style="margin-left:auto;"></span>
+      </div>
+      <div class="conf-bar" style="margin-bottom:12px"><div class="conf-fill" id="conf-fill" style="width:0%"></div></div>
+      <p style="font-size:0.85rem;color:var(--text-secondary);">
+        Los campos marcados con <span style="color:var(--indigo-light)">✨</span> fueron extraídos por la IA. Verifica y corrige si es necesario.
+      </p>
+    </div>
+
+    <!-- Questions Banner (hidden until needed) -->
+    <div class="questions-banner" id="questions-banner" style="display:none">
+      <h4>⚠️ Datos que necesitan tu atención</h4>
+      <ul id="questions-list"></ul>
+    </div>
+
+    <!-- STEP 2: Device Form -->
+    <div class="section-card" id="form-section">
+      <div class="section-title">📋 Paso 2 — Datos del Dispositivo</div>
+
+      <div class="flex flex-col gap-lg">
+
+        <!-- Row 1 -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label required" for="f-univ-serial">Serial Universitario <span id="lbl-univ-serial"></span></label>
+            <input type="text" id="f-univ-serial" class="form-input" placeholder="Ej: UNIV-2024-001234">
+          </div>
+          <div class="form-group">
+            <label class="form-label required" for="f-dev-serial">Serial del Dispositivo <span id="lbl-dev-serial"></span></label>
+            <input type="text" id="f-dev-serial" class="form-input" placeholder="Ej: CN123456789">
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label required" for="f-brand">Marca <span id="lbl-brand"></span></label>
+            <input type="text" id="f-brand" class="form-input" placeholder="Ej: HP, Dell, Lenovo...">
+          </div>
+          <div class="form-group">
+            <label class="form-label required" for="f-type">Tipo de Dispositivo <span id="lbl-type"></span></label>
+            <select id="f-type" class="form-select">
+              <option value="">— Selecciona —</option>
+              <option>Computador de Escritorio</option>
+              <option>Portátil/Laptop</option>
+              <option>Pantalla/Monitor</option>
+              <option>All-in-One</option>
+              <option>Tablet</option>
+              <option>Impresora</option>
+              <option>Servidor</option>
+              <option>Switch/Router</option>
+              <option>Proyector</option>
+              <option>Otro</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Specs -->
+        <div>
+          <div class="section-title" style="font-size:0.9rem;margin-bottom:14px;">⚙️ Especificaciones Técnicas <span class="text-muted text-xs">(opcional)</span></div>
+          <div class="flex flex-col gap-md">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="f-proc">Procesador <span id="lbl-proc"></span></label>
+                <input type="text" id="f-proc" class="form-input" placeholder="Ej: Intel Core i5-8400">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="f-ram">Memoria RAM <span id="lbl-ram"></span></label>
+                <input type="text" id="f-ram" class="form-input" placeholder="Ej: 8GB DDR4">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="f-storage">Almacenamiento <span id="lbl-stor"></span></label>
+                <input type="text" id="f-storage" class="form-input" placeholder="Ej: 256GB SSD">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="f-screen">Pantalla <span id="lbl-scr"></span></label>
+                <input type="text" id="f-screen" class="form-input" placeholder='Ej: 21.5" Full HD'>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="f-os">Sistema Operativo <span id="lbl-os"></span></label>
+                <input type="text" id="f-os" class="form-input" placeholder="Ej: Windows 10 Pro">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="f-other">Otras Especificaciones <span id="lbl-other"></span></label>
+                <input type="text" id="f-other" class="form-input" placeholder="Ej: Tarjeta gráfica, puertos...">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="form-group">
+          <label class="form-label required">Estado del Equipo</label>
+          <div class="status-options">
+            <div class="status-option functional">
+              <input type="radio" name="status" id="s-func" value="Funcional" checked>
+              <label for="s-func">✅ Funcional</label>
+            </div>
+            <div class="status-option non-functional">
+              <input type="radio" name="status" id="s-nofunc" value="No Funcional">
+              <label for="s-nofunc">❌ No Funcional</label>
+            </div>
+            <div class="status-option">
+              <input type="radio" name="status" id="s-unknown" value="Desconocido">
+              <label for="s-unknown" style="border-color:var(--warning-bg)">❓ Desconocido</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="form-group">
+          <label class="form-label" for="f-notes">Notas / Observaciones <span id="lbl-notes"></span></label>
+          <textarea id="f-notes" class="form-textarea" placeholder="Ej: Equipo con batería defectuosa, cable de poder faltante, sticker de inventario deteriorado..."></textarea>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-sm" style="margin-top:28px; justify-content:flex-end; flex-wrap:wrap;">
+        <a href="#" id="cancel-link" class="btn btn-ghost">Cancelar</a>
+        <button class="btn btn-primary btn-lg" id="btn-save" onclick="handleSave()">
+          💾 Guardar Equipo
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Firebase + Scripts -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/db.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/gemini.js"></script>
+<script>
+  const params  = new URLSearchParams(location.search);
+  const INV_ID  = params.get('inv');
+  const EDIT_ID = params.get('edit');
+  if (!INV_ID) location.href = 'app.html';
+
+  let currentUser  = null;
+  let selectedFiles= [];
+  let aiExtracted  = false;
+
+  // ── INIT ──────────────────────────────────────────────
+  requireAuth().then(user => {
+    currentUser = user;
+    document.getElementById('user-name').textContent  = user.displayName || 'Usuario';
+    document.getElementById('user-email').textContent = user.email;
+    document.getElementById('user-avatar').textContent =
+      (user.displayName || user.email).charAt(0).toUpperCase();
+
+    if (!sessionStorage.getItem(`inv_access_${INV_ID}`)) {
+      showToast('Acceso denegado.', 'warning');
+      setTimeout(() => location.href = 'app.html', 1200);
+      return;
+    }
+
+    const backUrl = `inventory.html?id=${INV_ID}`;
+    document.getElementById('back-link').href    = backUrl;
+    document.getElementById('cancel-link').href  = backUrl;
+    document.getElementById('link-back-inv').href= backUrl;
+
+    if (EDIT_ID) {
+      document.getElementById('page-title').textContent = 'Editar Equipo';
+      loadEditDevice();
+    }
+  });
+
+  initSidebar();
+
+  // ── LOAD DEVICE FOR EDITING ───────────────────────────
+  async function loadEditDevice() {
+    try {
+      const d = await getDevice(INV_ID, EDIT_ID);
+      fillForm(d, false);
+    } catch(e) { showToast('Error cargando dispositivo: ' + e.message, 'error'); }
+  }
+
+  // ── FILE UPLOAD ───────────────────────────────────────
+  const fileInput  = document.getElementById('file-input');
+  const uploadZone = document.getElementById('upload-zone');
+
+  fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+  // Drag & drop
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave',() => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault(); uploadZone.classList.remove('drag-over');
+    handleFiles(e.dataTransfer.files);
+  });
+
+  function handleFiles(files) {
+    const allowed = ['image/jpeg','image/jpg','image/png','image/webp'];
+    const valid = [...files].filter(f => allowed.includes(f.type));
+    const combined = [...selectedFiles, ...valid].slice(0, 4);
+    selectedFiles = combined;
+    renderPreviews();
+  }
+
+  function renderPreviews() {
+    const container = document.getElementById('img-previews');
+    container.innerHTML = selectedFiles.map((f, i) => {
+      const url = URL.createObjectURL(f);
+      return `<div class="img-thumb">
+        <img src="${url}" alt="Imagen ${i+1}">
+        <button class="remove-btn" onclick="removeImage(${i})">✕</button>
+      </div>`;
+    }).join('');
+
+    const n = selectedFiles.length;
+    document.getElementById('img-count-label').textContent = n > 0 ? `${n}/4 imagen(es) seleccionada(s)` : '';
+    document.getElementById('btn-analyze').disabled = n === 0;
+  }
+
+  function removeImage(i) {
+    selectedFiles.splice(i, 1);
+    renderPreviews();
+  }
+
+  function clearImages() {
+    selectedFiles = [];
+    fileInput.value = '';
+    renderPreviews();
+    document.getElementById('ai-panel').style.display = 'none';
+    document.getElementById('questions-banner').style.display = 'none';
+  }
+
+  // ── ANALYZE WITH GEMINI ───────────────────────────────
+  async function handleAnalyze() {
+    if (selectedFiles.length === 0) { showToast('Selecciona al menos una imagen.', 'warning'); return; }
+    const btn = document.getElementById('btn-analyze');
+    btn.classList.add('loading'); btn.disabled = true;
+    showLoading('Analizando imágenes con Gemini AI...');
+
+    try {
+      const result = await analyzeImagesWithGemini(selectedFiles);
+      hideLoading();
+      fillForm(result, true);
+      showAIPanel(result);
+      showQuestions(result);
+      aiExtracted = true;
+      showToast('¡Análisis completado! Verifica los datos extraídos.', 'success');
+    } catch(e) {
+      hideLoading();
+      showToast('Error en análisis: ' + e.message, 'error');
+    } finally {
+      btn.classList.remove('loading'); btn.disabled = false;
+    }
+  }
+
+  function fillForm(data, fromAI) {
+    const ai = fromAI ? '✨' : '';
+    const setVal = (id, val, lblId) => {
+      if (val) {
+        document.getElementById(id).value = val;
+        if (fromAI) document.getElementById(id).classList.add('ai-filled');
+        if (lblId) document.getElementById(lblId).textContent = fromAI && val ? ai : '';
+      }
+    };
+
+    setVal('f-univ-serial', data.universitySerial, 'lbl-univ-serial');
+    setVal('f-dev-serial',  data.deviceSerial,     'lbl-dev-serial');
+    setVal('f-brand',       data.brand,            'lbl-brand');
+
+    if (data.type) {
+      const sel = document.getElementById('f-type');
+      for (const opt of sel.options) {
+        if (opt.value === data.type) { sel.value = data.type; break; }
+      }
+      if (fromAI) document.getElementById('lbl-type').textContent = ai;
+    }
+
+    if (data.specs) {
+      setVal('f-proc',    data.specs.processor, 'lbl-proc');
+      setVal('f-ram',     data.specs.ram,        'lbl-ram');
+      setVal('f-storage', data.specs.storage,    'lbl-stor');
+      setVal('f-screen',  data.specs.screen,     'lbl-scr');
+      setVal('f-os',      data.specs.os,         'lbl-os');
+      setVal('f-other',   data.specs.other,      'lbl-other');
+    }
+
+    if (data.notes) setVal('f-notes', data.notes, 'lbl-notes');
+
+    if (data.status) {
+      const statusMap = { 'Funcional':'s-func','No Funcional':'s-nofunc','Desconocido':'s-unknown' };
+      const radioId = statusMap[data.status];
+      if (radioId) document.getElementById(radioId).checked = true;
+    }
+  }
+
+  function showAIPanel(result) {
+    const panel = document.getElementById('ai-panel');
+    const conf  = result.confidence || 0;
+    document.getElementById('conf-fill').style.width = conf + '%';
+    document.getElementById('ai-confidence-label').textContent = `Confianza: ${conf}%`;
+    panel.style.display = '';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function showQuestions(result) {
+    const questions = buildFollowUpQuestions(result);
+    const banner = document.getElementById('questions-banner');
+    const list   = document.getElementById('questions-list');
+    if (questions.length === 0) { banner.style.display = 'none'; return; }
+    list.innerHTML = questions.map(q => `<li>${escHtml(q)}</li>`).join('');
+    banner.style.display = '';
+  }
+
+  // ── SAVE DEVICE ───────────────────────────────────────
+  async function handleSave() {
+    const univSerial = document.getElementById('f-univ-serial').value.trim();
+    const devSerial  = document.getElementById('f-dev-serial').value.trim();
+    const brand      = document.getElementById('f-brand').value.trim();
+    const type       = document.getElementById('f-type').value;
+    const status     = document.querySelector('input[name="status"]:checked')?.value || 'Desconocido';
+    const notes      = document.getElementById('f-notes').value.trim();
+
+    if (!univSerial || !devSerial || !brand || !type) {
+      showToast('Completa los campos obligatorios (Serial Univ., Serial Disp., Marca, Tipo).', 'warning');
+      return;
+    }
+
+    const deviceData = {
+      universitySerial: univSerial,
+      deviceSerial:     devSerial,
+      brand, type, status, notes,
+      specs: {
+        processor: document.getElementById('f-proc').value.trim()    || null,
+        ram:       document.getElementById('f-ram').value.trim()      || null,
+        storage:   document.getElementById('f-storage').value.trim() || null,
+        screen:    document.getElementById('f-screen').value.trim()  || null,
+        os:        document.getElementById('f-os').value.trim()      || null,
+        other:     document.getElementById('f-other').value.trim()   || null,
+      },
+      extractedByAI: aiExtracted
+    };
+
+    const btn = document.getElementById('btn-save');
+    btn.classList.add('loading'); btn.disabled = true;
+    showLoading(EDIT_ID ? 'Actualizando equipo...' : 'Guardando equipo...');
+
+    try {
+      let deviceId = EDIT_ID;
+
+      if (EDIT_ID) {
+        await updateDevice(INV_ID, EDIT_ID, deviceData);
+      } else {
+        deviceId = await addDevice(INV_ID, deviceData, currentUser.uid);
+      }
+
+      hideLoading();
+      showToast(EDIT_ID ? 'Equipo actualizado.' : 'Equipo agregado al inventario.', 'success');
+      setTimeout(() => { location.href = `inventory.html?id=${INV_ID}`; }, 1000);
+    } catch(e) {
+      hideLoading();
+      showToast('Error al guardar: ' + e.message, 'error');
+      btn.classList.remove('loading'); btn.disabled = false;
+    }
+  }
+
+  async function handleLogout() { await auth.signOut(); location.href = 'index.html'; }
+  function escHtml(s) { const d=document.createElement('div');d.textContent=s;return d.innerHTML; }
+</script>
+</body>
+</html>

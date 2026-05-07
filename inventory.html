@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario — SysInventarios</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .inv-header-card {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:var(--radius-lg); padding:20px 24px;
+      display:flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:16px; margin-bottom:24px;
+    }
+    .type-icon { font-size:1.125rem; }
+    .status-func    { color:var(--success); }
+    .status-nofunc  { color:var(--danger);  }
+    .status-unknown { color:var(--warning); }
+    .filter-bar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; align-items:center; }
+    .filter-bar .search-wrap { flex:1; min-width:180px; position:relative; }
+    .filter-bar .search-wrap .si { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none; }
+    .filter-bar .search-wrap input { padding-left:36px; }
+    .ai-badge {
+      display:inline-flex; align-items:center; gap:4px;
+      font-size:0.7rem; padding:2px 8px; border-radius:var(--radius-full);
+      background:rgba(99,102,241,0.12); color:var(--indigo-light); border:1px solid rgba(99,102,241,0.2);
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">🖥️</div>
+      <div>
+        <div class="sidebar-brand-name">SysInventarios</div>
+        <div class="sidebar-brand-sub">Panel de Control</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-title">Navegación</div>
+      <a href="app.html" class="sidebar-link"><span class="icon">📦</span> Mis Inventarios</a>
+      <a href="#"        class="sidebar-link active" id="sidebar-inv-name"><span class="icon">📋</span> Inventario actual</a>
+      <div class="sidebar-section-title" style="margin-top:16px">Cuenta</div>
+      <button class="sidebar-link" onclick="handleLogout()"><span class="icon">🚪</span> Cerrar Sesión</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div>
+          <div class="user-name"  id="user-name">Cargando...</div>
+          <div class="user-email" id="user-email"></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main -->
+  <main class="main-content">
+    <!-- Back + Header -->
+    <div class="page-header">
+      <div>
+        <button class="hamburger btn btn-ghost btn-icon" id="hamburger">☰</button>
+        <div class="flex items-center gap-sm" style="margin-bottom:4px;">
+          <a href="app.html" class="btn btn-ghost btn-sm" style="padding:4px 10px;">← Volver</a>
+          <span class="live-dot">En vivo</span>
+        </div>
+        <h1 class="page-title" id="page-inv-title">Cargando...</h1>
+        <p class="page-subtitle" id="page-inv-desc"></p>
+      </div>
+      <div class="flex gap-sm flex-wrap">
+        <button class="btn btn-secondary btn-sm" onclick="openModal('modal-edit-inv')">⚙️ Configurar</button>
+        <a id="btn-add-device" class="btn btn-primary" href="#">➕ Agregar Equipo</a>
+      </div>
+    </div>
+
+    <!-- Inventory info card -->
+    <div class="inv-header-card">
+      <div class="flex gap-xl">
+        <div><div style="font-size:2rem;font-weight:800;color:var(--indigo-light)" id="hdr-count">—</div><div class="text-muted text-xs">Equipos</div></div>
+        <div><div style="font-size:2rem;font-weight:800;color:var(--success)"      id="hdr-func">—</div><div class="text-muted text-xs">Funcionales</div></div>
+        <div><div style="font-size:2rem;font-weight:800;color:var(--danger)"       id="hdr-nofunc">—</div><div class="text-muted text-xs">No Funcionales</div></div>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="si">🔍</span>
+        <input type="text" id="search-devices" class="form-input" placeholder="Buscar por serial, marca...">
+      </div>
+      <select id="filter-type"   class="form-select" style="width:auto;">
+        <option value="">Todos los tipos</option>
+        <option>Computador de Escritorio</option><option>Portátil/Laptop</option>
+        <option>Pantalla/Monitor</option><option>All-in-One</option>
+        <option>Tablet</option><option>Impresora</option><option>Servidor</option>
+        <option>Switch/Router</option><option>Proyector</option><option>Otro</option>
+      </select>
+      <select id="filter-status" class="form-select" style="width:auto;">
+        <option value="">Todos los estados</option>
+        <option value="Funcional">Funcional</option>
+        <option value="No Funcional">No Funcional</option>
+        <option value="Desconocido">Desconocido</option>
+      </select>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Serial Univ.</th>
+            <th>Serial Disp.</th>
+            <th>Marca</th>
+            <th>Estado</th>
+            <th>Notas</th>
+            <th>Agregado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="devices-tbody">
+          <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted);">Cargando dispositivos...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="empty-devices" style="display:none">
+      <div class="empty-state">
+        <div class="empty-state-icon">🖥️</div>
+        <h3 class="empty-state-title">Sin equipos aún</h3>
+        <p class="empty-state-text">Agrega el primer equipo usando las imágenes y el análisis con IA.</p>
+        <a id="btn-add-device-empty" href="#" class="btn btn-primary" style="margin-top:16px">➕ Agregar Equipo con IA</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL: Edit Inventory -->
+<div class="modal-backdrop" id="modal-edit-inv">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Configurar Inventario</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-edit-inv')">✕</button>
+    </div>
+    <div class="flex flex-col gap-md">
+      <div class="form-group">
+        <label class="form-label">Nombre</label>
+        <input type="text" id="edit-inv-name" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        <textarea id="edit-inv-desc" class="form-textarea"></textarea>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn btn-danger btn-sm" onclick="handleDeleteInventory()">🗑️ Eliminar Inventario</button>
+      <div class="flex gap-sm">
+        <button class="btn btn-ghost" onclick="closeModal('modal-edit-inv')">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save-inv" onclick="handleSaveInventory()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: View Device -->
+<div class="modal-backdrop" id="modal-view-device">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <h3 class="modal-title" id="view-device-title">Detalles del Equipo</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-view-device')">✕</button>
+    </div>
+    <div id="view-device-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="btn-delete-device">🗑️ Eliminar</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-view-device')">Cerrar</button>
+      <button class="btn btn-primary" id="btn-edit-device">✏️ Editar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/db.js"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  const INV_ID = params.get('id');
+  if (!INV_ID) location.href = 'app.html';
+
+  let currentUser = null;
+  let allDevices  = [];
+  let currentInv  = null;
+
+  // ── AUTH + ACCESS GUARD ──────────────────────────────
+  requireAuth().then(user => {
+    currentUser = user;
+    document.getElementById('user-name').textContent  = user.displayName || 'Usuario';
+    document.getElementById('user-email').textContent = user.email;
+    document.getElementById('user-avatar').textContent =
+      (user.displayName || user.email).charAt(0).toUpperCase();
+
+    // Check inventory session access
+    const hasAccess = sessionStorage.getItem(`inv_access_${INV_ID}`);
+    if (!hasAccess) {
+      showToast('Acceso denegado. Volviendo al dashboard.', 'warning');
+      setTimeout(() => location.href = 'app.html', 1500);
+      return;
+    }
+
+    // Load inventory info
+    getInventory(INV_ID).then(inv => {
+      currentInv = inv;
+      document.title = `${inv.name} — SysInventarios`;
+      document.getElementById('page-inv-title').textContent = inv.name;
+      document.getElementById('page-inv-desc').textContent  = inv.description || '';
+      document.getElementById('sidebar-inv-name').querySelector('span.icon').nextSibling.textContent = ` ${inv.name}`;
+      document.getElementById('edit-inv-name').value = inv.name;
+      document.getElementById('edit-inv-desc').value = inv.description || '';
+
+      // Link add device buttons
+      const url = `add-device.html?inv=${INV_ID}`;
+      document.getElementById('btn-add-device').href       = url;
+      document.getElementById('btn-add-device-empty').href = url;
+    });
+
+    // Start real-time listener
+    listenDevices(INV_ID, devices => {
+      allDevices = devices;
+      applyFilters();
+      updateHeaderStats(devices);
+    });
+  });
+
+  initSidebar();
+
+  // ── STATS ─────────────────────────────────────────────
+  function updateHeaderStats(devices) {
+    document.getElementById('hdr-count').textContent  = devices.length;
+    document.getElementById('hdr-func').textContent   = devices.filter(d => d.status === 'Funcional').length;
+    document.getElementById('hdr-nofunc').textContent = devices.filter(d => d.status === 'No Funcional').length;
+  }
+
+  // ── FILTERS ───────────────────────────────────────────
+  document.getElementById('search-devices').addEventListener('input', applyFilters);
+  document.getElementById('filter-type').addEventListener('change', applyFilters);
+  document.getElementById('filter-status').addEventListener('change', applyFilters);
+
+  function applyFilters() {
+    const q      = document.getElementById('search-devices').value.toLowerCase();
+    const type   = document.getElementById('filter-type').value;
+    const status = document.getElementById('filter-status').value;
+    const filtered = allDevices.filter(d => {
+      const matchQ = !q || [d.universitySerial,d.deviceSerial,d.brand,d.type]
+        .some(v => (v||'').toLowerCase().includes(q));
+      const matchT = !type   || d.type   === type;
+      const matchS = !status || d.status === status;
+      return matchQ && matchT && matchS;
+    });
+    renderDevices(filtered);
+  }
+
+  // ── RENDER TABLE ──────────────────────────────────────
+  const TYPE_ICONS = {
+    'Computador de Escritorio':'🖥️','Portátil/Laptop':'💻','Pantalla/Monitor':'🖵',
+    'All-in-One':'🖥️','Tablet':'📱','Impresora':'🖨️','Servidor':'🗄️',
+    'Switch/Router':'📡','Proyector':'📽️','Otro':'📦',
+  };
+  const STATUS_CLASS = { 'Funcional':'badge-success','No Funcional':'badge-danger','Desconocido':'badge-warning' };
+
+  function renderDevices(devices) {
+    const tbody = document.getElementById('devices-tbody');
+    const empty = document.getElementById('empty-devices');
+    if (devices.length === 0) {
+      tbody.innerHTML = '';
+      if (allDevices.length === 0) { empty.style.display = ''; }
+      else { empty.style.display = 'none'; tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted);">Sin resultados para los filtros aplicados.</td></tr>`; }
+      return;
+    }
+    empty.style.display = 'none';
+    tbody.innerHTML = devices.map(d => `
+      <tr onclick="viewDevice('${d.id}')" style="cursor:pointer" title="Click para ver detalles">
+        <td><span class="type-icon">${TYPE_ICONS[d.type]||'📦'}</span> <span class="text-sm">${escHtml(d.type||'—')}</span></td>
+        <td><code style="font-size:0.8rem;color:var(--indigo-light)">${escHtml(d.universitySerial||'—')}</code></td>
+        <td class="td-muted">${escHtml(d.deviceSerial||'—')}</td>
+        <td><strong>${escHtml(d.brand||'—')}</strong></td>
+        <td><span class="badge ${STATUS_CLASS[d.status]||'badge-default'}">${escHtml(d.status||'Desconocido')}</span></td>
+        <td class="td-muted" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(d.notes||'')}">
+          ${d.notes ? escHtml(d.notes.slice(0,60))+(d.notes.length>60?'…':'') : '—'}
+        </td>
+        <td class="td-muted">${timeAgo(d.createdAt)}</td>
+        <td onclick="event.stopPropagation()">
+          <div class="flex gap-xs">
+            <button class="btn btn-ghost btn-icon btn-sm" title="Ver detalles" onclick="viewDevice('${d.id}')">👁️</button>
+            <button class="btn btn-danger  btn-icon btn-sm" title="Eliminar" onclick="confirmDeleteDevice('${d.id}')">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ── VIEW DEVICE ───────────────────────────────────────
+  function viewDevice(id) {
+    const d = allDevices.find(x => x.id === id);
+    if (!d) return;
+    document.getElementById('view-device-title').textContent = `${d.brand || ''} ${d.type || ''}`.trim() || 'Detalles';
+    document.getElementById('view-device-body').innerHTML = `
+      <div class="flex flex-col gap-md">
+        <div class="flex gap-md flex-wrap">
+          <div style="flex:1;min-width:200px">
+            <div class="form-label">Serial Universitario</div>
+            <div style="font-weight:600;color:var(--indigo-light);margin-top:4px">${escHtml(d.universitySerial||'—')}</div>
+          </div>
+          <div style="flex:1;min-width:200px">
+            <div class="form-label">Serial del Dispositivo</div>
+            <div style="font-weight:600;margin-top:4px">${escHtml(d.deviceSerial||'—')}</div>
+          </div>
+        </div>
+        <div class="flex gap-md flex-wrap">
+          <div style="flex:1"><div class="form-label">Marca</div><div style="margin-top:4px">${escHtml(d.brand||'—')}</div></div>
+          <div style="flex:1"><div class="form-label">Tipo</div><div style="margin-top:4px">${escHtml(d.type||'—')}</div></div>
+          <div style="flex:1"><div class="form-label">Estado</div>
+            <div style="margin-top:4px"><span class="badge ${STATUS_CLASS[d.status]||'badge-default'}">${escHtml(d.status||'Desconocido')}</span></div>
+          </div>
+        </div>
+        ${d.specs ? `
+        <div class="divider"></div>
+        <div class="form-label" style="margin-bottom:8px">Especificaciones Técnicas</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          ${[['Procesador',d.specs.processor],['RAM',d.specs.ram],['Almacenamiento',d.specs.storage],['Pantalla',d.specs.screen],['Sistema Operativo',d.specs.os],['Otros',d.specs.other]].filter(([,v])=>v).map(([k,v])=>`
+          <div style="background:var(--bg-tertiary);border-radius:var(--radius-sm);padding:10px 14px">
+            <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">${k}</div>
+            <div style="font-size:0.875rem;margin-top:3px">${escHtml(v)}</div>
+          </div>`).join('')}
+        </div>` : ''}
+        ${d.notes ? `<div class="form-group"><div class="form-label">Notas</div><div style="color:var(--text-secondary);margin-top:4px;line-height:1.6">${escHtml(d.notes)}</div></div>` : ''}
+        <div class="flex gap-md text-xs text-muted">
+          <span>Creado: ${formatDate(d.createdAt)}</span>
+          <span>Actualizado: ${formatDate(d.updatedAt)}</span>
+          ${d.extractedByAI ? '<span class="ai-badge">🤖 Extraído por IA</span>' : ''}
+        </div>
+      </div>
+    `;
+    document.getElementById('btn-delete-device').onclick = () => confirmDeleteDevice(id);
+    document.getElementById('btn-edit-device').onclick   = () => {
+      closeModal('modal-view-device');
+      location.href = `add-device.html?inv=${INV_ID}&edit=${id}`;
+    };
+    openModal('modal-view-device');
+  }
+
+  // ── DELETE DEVICE ─────────────────────────────────────
+  async function confirmDeleteDevice(id) {
+    closeModal('modal-view-device');
+    const ok = await confirmDialog('¿Eliminar este equipo del inventario? Esta acción no se puede deshacer.', 'Eliminar Equipo');
+    if (!ok) return;
+    try {
+      await deleteDevice(INV_ID, id);
+      showToast('Equipo eliminado.', 'success');
+    } catch (e) {
+      showToast('Error al eliminar: ' + e.message, 'error');
+    }
+  }
+
+  // ── EDIT INVENTORY ────────────────────────────────────
+  async function handleSaveInventory() {
+    const name = document.getElementById('edit-inv-name').value.trim();
+    const desc = document.getElementById('edit-inv-desc').value.trim();
+    if (!name) { showToast('El nombre es requerido.','warning'); return; }
+    const btn = document.getElementById('btn-save-inv');
+    btn.classList.add('loading'); btn.disabled = true;
+    try {
+      await updateInventory(INV_ID, { name, description: desc });
+      document.getElementById('page-inv-title').textContent = name;
+      closeModal('modal-edit-inv');
+      showToast('Inventario actualizado.', 'success');
+    } catch(e) { showToast(e.message,'error'); }
+    finally { btn.classList.remove('loading'); btn.disabled = false; }
+  }
+
+  async function handleDeleteInventory() {
+    closeModal('modal-edit-inv');
+    const ok = await confirmDialog('¿Eliminar ESTE INVENTARIO y todos sus equipos? Esta acción es PERMANENTE.', '⚠️ Eliminar Inventario');
+    if (!ok) return;
+    try {
+      await deleteInventory(INV_ID);
+      sessionStorage.removeItem(`inv_access_${INV_ID}`);
+      showToast('Inventario eliminado.','success');
+      setTimeout(() => location.href = 'app.html', 1000);
+    } catch(e) { showToast(e.message,'error'); }
+  }
+
+  async function handleLogout() { await auth.signOut(); location.href = 'index.html'; }
+  function escHtml(s) { const d=document.createElement('div');d.textContent=s;return d.innerHTML; }
+</script>
+</body>
+</html>
