@@ -4,17 +4,54 @@
  */
 
 /**
+ * Comprime una imagen si es muy grande antes de mandarla a la IA.
+ * Esto evita errores de "Payload Too Large" (500/413).
+ */
+function compressImage(file, maxWidth = 1600, quality = 0.8) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (e) => {
+      const img = new Image();
+      img.src = e.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = (maxWidth / width) * height;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          resolve(blob);
+        }, 'image/jpeg', quality);
+      };
+    };
+  });
+}
+
+/**
  * Convierte un File a objeto { mimeType, data (base64) }
  */
-function fileToBase64(file) {
+async function fileToBase64(file) {
+  // Comprimir primero si es una imagen grande
+  const blob = file.size > 800 * 1024 ? await compressImage(file) : file;
+  
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
-      const base64 = reader.result.split(',')[1]; // strip data:mime;base64,
-      resolve({ mimeType: file.type, data: base64 });
+      const base64 = reader.result.split(',')[1];
+      resolve({ mimeType: 'image/jpeg', data: base64 });
     };
     reader.onerror = reject;
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(blob);
   });
 }
 

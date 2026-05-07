@@ -77,7 +77,7 @@ exports.handler = async (event) => {
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,22 +85,26 @@ exports.handler = async (event) => {
           contents: [{ parts }],
           generationConfig: {
             temperature: 0.1,
-            maxOutputTokens: 1024,
+            maxOutputTokens: 2048,
           },
         }),
       }
     );
 
     if (!response.ok) {
-      const errData = await response.json();
-      throw new Error(errData.error?.message || `Gemini API error ${response.status}`);
+      const errData = await response.json().catch(() => ({}));
+      console.error('Gemini API Error:', errData);
+      return {
+        statusCode: response.status,
+        body: JSON.stringify({ error: `Error de Gemini (${response.status}): ${errData.error?.message || 'Error desconocido'}` }),
+      };
     }
 
     const data = await response.json();
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
 
-    // Strip possible markdown code fences
-    const cleaned = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    // Strip markdown and parse JSON
+    const cleaned = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
     const extracted = JSON.parse(cleaned);
 
     return {
@@ -109,9 +113,10 @@ exports.handler = async (event) => {
       body: JSON.stringify(extracted),
     };
   } catch (err) {
+    console.error('Function Error:', err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: err.message }),
+      body: JSON.stringify({ error: 'Error interno en la función: ' + err.message }),
     };
   }
 };
