@@ -71,6 +71,7 @@
         <p class="page-subtitle" id="page-inv-desc"></p>
       </div>
       <div class="flex gap-sm flex-wrap">
+        <button class="btn btn-success btn-sm" onclick="exportToExcel()">📊 Exportar Excel</button>
         <button class="btn btn-secondary btn-sm" onclick="openModal('modal-edit-inv')">⚙️ Configurar</button>
         <a id="btn-add-device" class="btn btn-primary" href="#">➕ Agregar Equipo</a>
       </div>
@@ -181,12 +182,71 @@
   </div>
 </div>
 
+<!-- MODAL: Edit Device -->
+<div class="modal-backdrop" id="modal-edit-device">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header">
+      <h3 class="modal-title">✏️ Editar Equipo</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-edit-device')">✕</button>
+    </div>
+    <div class="flex flex-col gap-md">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label required">Serial Universitario</label><input type="text" id="ed-univ-serial" class="form-input"></div>
+        <div class="form-group"><label class="form-label">Serial del Dispositivo</label><input type="text" id="ed-dev-serial" class="form-input"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label required">Marca</label><input type="text" id="ed-brand" class="form-input"></div>
+        <div class="form-group">
+          <label class="form-label required">Tipo</label>
+          <select id="ed-type" class="form-select">
+            <option>Computador de Escritorio</option><option>Portátil/Laptop</option>
+            <option>Pantalla/Monitor</option><option>All-in-One</option>
+            <option>Tablet</option><option>Impresora</option><option>Servidor</option>
+            <option>Switch/Router</option><option>Proyector</option><option>Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Procesador</label><input type="text" id="ed-proc" class="form-input"></div>
+        <div class="form-group"><label class="form-label">RAM</label><input type="text" id="ed-ram" class="form-input"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Almacenamiento</label><input type="text" id="ed-storage" class="form-input"></div>
+        <div class="form-group"><label class="form-label">Pantalla</label><input type="text" id="ed-screen" class="form-input"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Sistema Operativo</label><input type="text" id="ed-os" class="form-input"></div>
+        <div class="form-group"><label class="form-label">Otras Specs</label><input type="text" id="ed-other" class="form-input"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label required">Estado</label>
+        <div class="status-options">
+          <div class="status-option functional"><input type="radio" name="ed-status" id="eds-func" value="Funcional"><label for="eds-func">✅ Funcional</label></div>
+          <div class="status-option non-functional"><input type="radio" name="ed-status" id="eds-nofunc" value="No Funcional"><label for="eds-nofunc">❌ No Funcional</label></div>
+          <div class="status-option"><input type="radio" name="ed-status" id="eds-unknown" value="Desconocido"><label for="eds-unknown">❓ Desconocido</label></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas / Observaciones</label>
+        <textarea id="ed-notes" class="form-textarea" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit-device')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-device" onclick="handleSaveDevice()">💾 Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+<!-- SheetJS for Excel export -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 <script src="js/firebase-config.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/db.js"></script>
@@ -298,8 +358,9 @@
         <td class="td-muted">${timeAgo(d.createdAt)}</td>
         <td onclick="event.stopPropagation()">
           <div class="flex gap-xs">
-            <button class="btn btn-ghost btn-icon btn-sm" title="Ver detalles" onclick="viewDevice('${d.id}')">👁️</button>
-            <button class="btn btn-danger  btn-icon btn-sm" title="Eliminar" onclick="confirmDeleteDevice('${d.id}')">🗑️</button>
+            <button class="btn btn-ghost btn-icon btn-sm" title="Ver detalles"  onclick="viewDevice('${d.id}')">👁️</button>
+            <button class="btn btn-primary btn-icon btn-sm" title="Editar"       onclick="openEditModal('${d.id}')">✏️</button>
+            <button class="btn btn-danger  btn-icon btn-sm" title="Eliminar"    onclick="confirmDeleteDevice('${d.id}')">🗑️</button>
           </div>
         </td>
       </tr>
@@ -399,6 +460,92 @@
 
   async function handleLogout() { await auth.signOut(); location.href = 'index.html'; }
   function escHtml(s) { const d=document.createElement('div');d.textContent=s;return d.innerHTML; }
+
+  // ── EDIT DEVICE MODAL ────────────────────────────────
+  let editingDeviceId = null;
+
+  function openEditModal(id) {
+    const d = allDevices.find(x => x.id === id);
+    if (!d) return;
+    editingDeviceId = id;
+    document.getElementById('ed-univ-serial').value = d.universitySerial || '';
+    document.getElementById('ed-dev-serial').value  = d.deviceSerial     || '';
+    document.getElementById('ed-brand').value       = d.brand            || '';
+    document.getElementById('ed-type').value        = d.type             || '';
+    document.getElementById('ed-proc').value        = d.specs?.processor || '';
+    document.getElementById('ed-ram').value         = d.specs?.ram       || '';
+    document.getElementById('ed-storage').value     = d.specs?.storage   || '';
+    document.getElementById('ed-screen').value      = d.specs?.screen    || '';
+    document.getElementById('ed-os').value          = d.specs?.os        || '';
+    document.getElementById('ed-other').value       = d.specs?.other     || '';
+    document.getElementById('ed-notes').value       = d.notes            || '';
+    const statusMap = { 'Funcional':'eds-func', 'No Funcional':'eds-nofunc', 'Desconocido':'eds-unknown' };
+    const radioId = statusMap[d.status] || 'eds-unknown';
+    document.getElementById(radioId).checked = true;
+    openModal('modal-edit-device');
+  }
+
+  async function handleSaveDevice() {
+    const univSerial = document.getElementById('ed-univ-serial').value.trim();
+    const devSerial  = document.getElementById('ed-dev-serial').value.trim();
+    const brand      = document.getElementById('ed-brand').value.trim();
+    const type       = document.getElementById('ed-type').value;
+    const status     = document.querySelector('input[name="ed-status"]:checked')?.value || 'Desconocido';
+    const notes      = document.getElementById('ed-notes').value.trim();
+
+    if (!univSerial || !brand || !type) {
+      showToast('Completa los campos obligatorios.', 'warning'); return;
+    }
+    const btn = document.getElementById('btn-save-device');
+    btn.classList.add('loading'); btn.disabled = true;
+    try {
+      await updateDevice(INV_ID, editingDeviceId, {
+        universitySerial: univSerial, deviceSerial: devSerial,
+        brand, type, status, notes,
+        specs: {
+          processor: document.getElementById('ed-proc').value.trim()    || null,
+          ram:       document.getElementById('ed-ram').value.trim()      || null,
+          storage:   document.getElementById('ed-storage').value.trim() || null,
+          screen:    document.getElementById('ed-screen').value.trim()  || null,
+          os:        document.getElementById('ed-os').value.trim()      || null,
+          other:     document.getElementById('ed-other').value.trim()   || null,
+        },
+      });
+      closeModal('modal-edit-device');
+      showToast('Equipo actualizado correctamente.', 'success');
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+    finally { btn.classList.remove('loading'); btn.disabled = false; }
+  }
+
+  // ── EXPORT TO EXCEL ───────────────────────────────────
+  function exportToExcel() {
+    if (allDevices.length === 0) { showToast('No hay equipos para exportar.', 'warning'); return; }
+    const invName = currentInv?.name || 'Inventario';
+    const rows = allDevices.map(d => ({
+      'Serial Universitario': d.universitySerial || '',
+      'Serial Dispositivo':   d.deviceSerial     || '',
+      'Marca':                d.brand            || '',
+      'Tipo':                 d.type             || '',
+      'Estado':               d.status           || '',
+      'Procesador':           d.specs?.processor || '',
+      'RAM':                  d.specs?.ram       || '',
+      'Almacenamiento':       d.specs?.storage   || '',
+      'Pantalla':             d.specs?.screen    || '',
+      'Sistema Operativo':    d.specs?.os        || '',
+      'Otras Specs':          d.specs?.other     || '',
+      'Notas':                d.notes            || '',
+      'Extraído por IA':      d.extractedByAI ? 'Sí' : 'No',
+      'Fecha Registro':       d.createdAt ? formatDate(d.createdAt) : '',
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    // Set column widths
+    ws['!cols'] = [20,20,14,22,14,22,12,16,14,20,16,30,14,16].map(w => ({ wch: w }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, invName.slice(0, 31));
+    const fileName = `${invName.replace(/[^a-zA-Z0-9 ]/g,'_')}_${new Date().toISOString().slice(0,10)}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    showToast(`Excel exportado: ${fileName}`, 'success');
+  }
 </script>
 </body>
 </html>
