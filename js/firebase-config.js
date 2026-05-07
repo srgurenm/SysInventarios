@@ -14,7 +14,7 @@
  */
 
 const firebaseConfig = {
-  apiKey:            "AIzaSyA930GMhXmfSkIdnx3Eai8yFbuJiW0bKkc",
+  apiKey:            "AIzaSyA93OGMhXmfSkIdnx3Eai8yFbuJiW0bKkc",
   authDomain:        "sysinventarios-beaa1.firebaseapp.com",
   projectId:         "sysinventarios-beaa1",
   storageBucket:     "sysinventarios-beaa1.firebasestorage.app",
