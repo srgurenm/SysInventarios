@@ -9,9 +9,21 @@
  * Crea un nuevo inventario.
  * La contraseña se hashea con bcryptjs antes de guardar.
  */
+// Helper to get bcrypt object (it might be global or under dcodeIO)
+const getBcrypt = () => {
+  if (typeof bcrypt !== 'undefined') return bcrypt;
+  if (typeof dcodeIO !== 'undefined' && dcodeIO.bcrypt) return dcodeIO.bcrypt;
+  throw new Error('La librería de encriptación (bcrypt) no se ha cargado correctamente.');
+};
+
+/**
+ * Crea un nuevo inventario.
+ * La contraseña se hashea con bcryptjs antes de guardar.
+ */
 async function createInventory(name, description, password, uid) {
-  const salt = bcrypt.genSaltSync(10);
-  const passwordHash = bcrypt.hashSync(password, salt);
+  const hasher = getBcrypt();
+  const salt = hasher.genSaltSync(10);
+  const passwordHash = hasher.hashSync(password, salt);
 
   const ref = await db.collection('inventories').add({
     name,
@@ -53,7 +65,8 @@ async function getInventory(id) {
  */
 async function verifyInventoryPassword(inventoryId, password) {
   const inv = await getInventory(inventoryId);
-  return bcrypt.compareSync(password, inv.passwordHash);
+  const hasher = getBcrypt();
+  return hasher.compareSync(password, inv.passwordHash);
 }
 
 /**
