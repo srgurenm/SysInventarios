@@ -189,3 +189,26 @@ async function checkDuplicateSerial(inventoryId, univSerial, devSerial, excludeD
   return null;
 }
 
+/**
+ * Agrega múltiples dispositivos en lote (Batch).
+ */
+async function bulkAddDevices(inventoryId, devices, userId) {
+  const batch = db.batch();
+  const invRef = db.collection('inventories').doc(inventoryId);
+  const devicesRef = invRef.collection('devices');
+  const now = firebase.firestore.FieldValue.serverTimestamp();
+
+  devices.forEach(device => {
+    const docRef = devicesRef.doc();
+    batch.set(docRef, {
+      ...device,
+      createdBy: userId,
+      createdAt: now,
+      updatedAt: now
+    });
+  });
+
+  await batch.commit();
+}
+
+

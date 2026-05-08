@@ -127,3 +127,24 @@ function buildFollowUpQuestions(extracted) {
 
   return [...questions, ...extra];
 }
+
+/**
+ * Envía una lista de filas de Excel a Gemini para mapearlas al esquema de la app.
+ */
+async function analyzeBulkExcel(data) {
+  if (!data || data.length === 0) throw new Error('No hay datos para procesar.');
+
+  const response = await fetch('/api/analyze-bulk', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || `Error ${response.status} en análisis masivo.`);
+  }
+
+  return response.json();
+}
+

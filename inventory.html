@@ -72,6 +72,7 @@
       </div>
       <div class="flex gap-sm flex-wrap">
         <button class="btn btn-success btn-sm" onclick="exportToExcel()">📊 Exportar Excel</button>
+        <button class="btn btn-secondary btn-sm" onclick="openModal('modal-import-excel')">📥 Importar Excel</button>
         <button class="btn btn-secondary btn-sm" onclick="openModal('modal-edit-inv')">⚙️ Configurar</button>
         <a id="btn-add-device" class="btn btn-primary" href="#">➕ Agregar Equipo</a>
       </div>
@@ -251,6 +252,58 @@
   </div>
 </div>
 
+<!-- MODAL: Import Excel -->
+<div class="modal-backdrop" id="modal-import-excel">
+  <div class="modal" style="max-width:800px">
+    <div class="modal-header">
+      <h3 class="modal-title">📥 Importar desde Excel</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-import-excel')">✕</button>
+    </div>
+    
+    <div id="import-step-1">
+      <div class="flex flex-col gap-md">
+        <p class="text-sm text-secondary">Sube un archivo Excel (.xlsx, .xls) o CSV. La IA analizará las columnas y mapeará los datos automáticamente.</p>
+        <div style="border:2px dashed var(--border); border-radius:var(--radius-lg); padding:40px; text-align:center; cursor:pointer;" onclick="document.getElementById('excel-input').click()">
+          <input type="file" id="excel-input" accept=".xlsx, .xls, .csv" style="display:none" onchange="handleExcelFile(event)">
+          <div style="font-size:2.5rem;margin-bottom:12px">📊</div>
+          <h4 id="excel-file-name">Seleccionar archivo</h4>
+          <p class="text-xs text-muted">Haz clic para buscar en tu equipo</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="import-step-2" style="display:none">
+      <div class="flex flex-col gap-md">
+        <div class="flex justify-between items-center">
+          <h4 class="text-sm">Vista Previa y Mapeo IA</h4>
+          <span class="badge badge-info" id="import-count-badge">0 filas</span>
+        </div>
+        <div class="table-wrap" style="max-height:400px">
+          <table style="font-size:0.75rem">
+            <thead>
+              <tr>
+                <th>Marca</th>
+                <th>Tipo</th>
+                <th>Serial Univ.</th>
+                <th>Serial Disp.</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="import-preview-body"></tbody>
+          </table>
+        </div>
+        <p class="text-xs text-muted">✨ Gemini ha normalizado estos datos. Revisa que todo esté correcto antes de guardar.</p>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-import-excel')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-bulk-analyze" style="display:none" onclick="handleBulkAnalyze()">✨ Analizar con IA</button>
+      <button class="btn btn-success" id="btn-bulk-save" style="display:none" onclick="handleBulkSave()">💾 Guardar Equipos</button>
+    </div>
+  </div>
+</div>
+
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -263,6 +316,7 @@
 <script src="js/firebase-config.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/db.js"></script>
+<script src="js/gemini.js"></script>
 <script>
   const params = new URLSearchParams(location.search);
   const INV_ID = params.get('id');
@@ -604,6 +658,94 @@
     navigator.clipboard.writeText(text).then(() => {
       showToast('Copiado al portapapeles', 'success', 2000);
     });
+  }
+
+  // ── BULK IMPORT LOGIC ──────────────────────────────
+  let rawExcelData = [];
+  let mappedDevices = [];
+
+  function handleExcelFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    document.getElementById('excel-file-name').textContent = file.name;
+    
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheet = workbook.SheetNames[0];
+      const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
+      
+      rawExcelData = jsonData;
+      if (rawExcelData.length > 0) {
+        document.getElementById('btn-bulk-analyze').style.display = 'inline-flex';
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  async function handleBulkAnalyze() {
+    if (rawExcelData.length === 0) return;
+    
+    const btn = document.getElementById('btn-bulk-analyze');
+    btn.classList.add('loading'); btn.disabled = true;
+    showLoading('Gemini está analizando y mapeando tus datos...');
+
+    try {
+      // Limit to first 50 for stability
+      const dataToProcess = rawExcelData.slice(0, 50);
+      mappedDevices = await analyzeBulkExcel(dataToProcess);
+      
+      renderBulkPreview(mappedDevices);
+      document.getElementById('import-step-1').style.display = 'none';
+      document.getElementById('import-step-2').style.display = 'block';
+      document.getElementById('btn-bulk-analyze').style.display = 'none';
+      document.getElementById('btn-bulk-save').style.display = 'inline-flex';
+      document.getElementById('import-count-badge').textContent = `${mappedDevices.length} equipos`;
+      
+      hideLoading();
+      showToast('Análisis completado. Verifica los datos.', 'success');
+    } catch (err) {
+      hideLoading();
+      showToast('Error en análisis IA: ' + err.message, 'error');
+    } finally {
+      btn.classList.remove('loading'); btn.disabled = false;
+    }
+  }
+
+  function renderBulkPreview(devices) {
+    const tbody = document.getElementById('import-preview-body');
+    tbody.innerHTML = devices.map(d => `
+      <tr>
+        <td>${escHtml(d.brand || '—')}</td>
+        <td>${escHtml(d.type || '—')}</td>
+        <td><code>${escHtml(d.universitySerial || '—')}</code></td>
+        <td>${escHtml(d.deviceSerial || '—')}</td>
+        <td><span class="badge ${STATUS_CLASS[d.status]}">${d.status}</span></td>
+      </tr>
+    `).join('');
+  }
+
+  async function handleBulkSave() {
+    const btn = document.getElementById('btn-bulk-save');
+    btn.classList.add('loading'); btn.disabled = true;
+    showLoading(`Guardando ${mappedDevices.length} equipos...`);
+
+    try {
+      await bulkAddDevices(INV_ID, mappedDevices, currentUser.uid);
+      hideLoading();
+      showToast('¡Importación exitosa!', 'success');
+      closeModal('modal-import-excel');
+      // Reset
+      rawExcelData = []; mappedDevices = [];
+      document.getElementById('import-step-1').style.display = 'block';
+      document.getElementById('import-step-2').style.display = 'none';
+      document.getElementById('btn-bulk-save').style.display = 'none';
+    } catch (err) {
+      hideLoading();
+      showToast('Error al guardar: ' + err.message, 'error');
+      btn.classList.remove('loading'); btn.disabled = false;
+    }
   }
 </script>
 </body>
