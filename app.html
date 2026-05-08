@@ -128,12 +128,12 @@
       <!-- Loaded dynamically -->
     </div>
     <div id="empty-state" style="display:none">
-      <div class="empty-state">
-        <div class="empty-state-icon">📦</div>
-        <h3 class="empty-state-title">Sin inventarios aún</h3>
-        <p class="empty-state-text">Crea tu primer inventario para comenzar a registrar equipos electrónicos.</p>
-        <button class="btn btn-primary" onclick="openModal('modal-new-inv')" style="margin-top:16px">
-          ➕ Crear Inventario
+      <div class="empty-state" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:60px 40px;box-shadow:var(--shadow-lg);text-align:center;">
+        <div class="empty-state-icon" style="font-size:4rem;margin-bottom:24px;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">📦</div>
+        <h3 class="empty-state-title" style="font-size:1.5rem;margin-bottom:12px;">Tu inventario está vacío</h3>
+        <p class="empty-state-text" style="max-width:400px;margin:0 auto 24px;color:var(--text-secondary);">Organiza todos tus activos electrónicos en un solo lugar. Comienza creando tu primer inventario institucional.</p>
+        <button class="btn btn-primary btn-lg" onclick="openModal('modal-new-inv')" style="padding:12px 32px;font-weight:600;box-shadow:var(--shadow-glow);">
+          ➕ Crear Primer Inventario
         </button>
       </div>
     </div>

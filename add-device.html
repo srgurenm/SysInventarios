@@ -62,12 +62,16 @@
     .conf-bar { height: 6px; background: var(--border); border-radius: var(--radius-full); overflow: hidden; }
     .conf-fill { height: 100%; background: var(--gradient); border-radius: var(--radius-full); transition: width 0.6s var(--ease); }
 
-    /* Section card */
-    .section-card {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px;
-    }
     .section-title { font-size: 1rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
+    /* Duplicate Warning */
+    .dup-warning {
+      display: none; align-items: center; gap: 8px;
+      margin-top: 6px; padding: 8px 12px;
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+      border-radius: var(--radius-sm); color: #ef4444; font-size: 0.8rem;
+    }
+    .form-input.is-invalid { border-color: #ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,0.1); }
   </style>
 </head>
 <body>
@@ -163,11 +167,13 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label required" for="f-univ-serial">Serial Universitario <span id="lbl-univ-serial"></span></label>
-            <input type="text" id="f-univ-serial" class="form-input" placeholder="Ej: UNIV-2024-001234">
+            <input type="text" id="f-univ-serial" class="form-input" placeholder="Ej: UNIV-2024-001234" oninput="handleSerialInput()">
+            <div id="dup-univ-msg" class="dup-warning">⚠️ Este serial ya está registrado en este inventario.</div>
           </div>
           <div class="form-group">
             <label class="form-label required" for="f-dev-serial">Serial del Dispositivo <span id="lbl-dev-serial"></span></label>
-            <input type="text" id="f-dev-serial" class="form-input" placeholder="Ej: CN123456789">
+            <input type="text" id="f-dev-serial" class="form-input" placeholder="Ej: CN123456789" oninput="handleSerialInput()">
+            <div id="dup-dev-msg" class="dup-warning">⚠️ Este serial de fabricante ya existe.</div>
           </div>
         </div>
 
@@ -490,8 +496,16 @@
     showLoading(EDIT_ID ? 'Actualizando equipo...' : 'Guardando equipo...');
 
     try {
-      let deviceId = EDIT_ID;
+      // Final duplicate check before save
+      const dup = await checkDuplicateSerial(INV_ID, univSerial, devSerial, EDIT_ID);
+      if (dup) {
+        hideLoading();
+        showToast(`Error: El serial ${dup.type} ya existe.`, 'error');
+        btn.classList.remove('loading'); btn.disabled = false;
+        return;
+      }
 
+      let deviceId = EDIT_ID;
       if (EDIT_ID) {
         await updateDevice(INV_ID, EDIT_ID, deviceData);
       } else {
@@ -507,6 +521,37 @@
       btn.classList.remove('loading'); btn.disabled = false;
     }
   }
+
+  // ── DUPLICATE DETECTION ──────────────────────────────
+  let dupTimeout = null;
+  async function handleSerialInput() {
+    clearTimeout(dupTimeout);
+    dupTimeout = setTimeout(async () => {
+      const univ = document.getElementById('f-univ-serial').value.trim();
+      const dev  = document.getElementById('f-dev-serial').value.trim();
+      
+      const dup = await checkDuplicateSerial(INV_ID, univ, dev, EDIT_ID);
+      
+      const univMsg = document.getElementById('dup-univ-msg');
+      const devMsg  = document.getElementById('dup-dev-msg');
+      const univInp = document.getElementById('f-univ-serial');
+      const devInp  = document.getElementById('f-dev-serial');
+
+      univMsg.style.display = (dup && dup.type === 'universitario') ? 'flex' : 'none';
+      devMsg.style.display  = (dup && dup.type === 'fabricante')    ? 'flex' : 'none';
+      
+      univInp.classList.toggle('is-invalid', dup && dup.type === 'universitario');
+      devInp.classList.toggle('is-invalid',  dup && dup.type === 'fabricante');
+    }, 500);
+  }
+
+  // ── KEYBOARD SHORTCUTS ───────────────────────────────
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      handleSave();
+    }
+  });
 
   async function handleLogout() { await auth.signOut(); location.href = 'index.html'; }
   function escHtml(s) { const d=document.createElement('div');d.textContent=s;return d.innerHTML; }

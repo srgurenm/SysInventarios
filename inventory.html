@@ -191,8 +191,16 @@
     </div>
     <div class="flex flex-col gap-md">
       <div class="form-row">
-        <div class="form-group"><label class="form-label required">Serial Universitario</label><input type="text" id="ed-univ-serial" class="form-input"></div>
-        <div class="form-group"><label class="form-label">Serial del Dispositivo</label><input type="text" id="ed-dev-serial" class="form-input"></div>
+        <div class="form-group">
+          <label class="form-label required">Serial Universitario</label>
+          <input type="text" id="ed-univ-serial" class="form-input" oninput="handleEditSerialInput()">
+          <div id="ed-dup-univ-msg" style="display:none;color:var(--danger);font-size:0.75rem;margin-top:4px">⚠️ Ya existe en este inventario</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Serial del Dispositivo</label>
+          <input type="text" id="ed-dev-serial" class="form-input" oninput="handleEditSerialInput()">
+          <div id="ed-dup-dev-msg" style="display:none;color:var(--danger);font-size:0.75rem;margin-top:4px">⚠️ Ya existe en este inventario</div>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label required">Marca</label><input type="text" id="ed-brand" class="form-input"></div>
@@ -348,8 +356,18 @@
     tbody.innerHTML = devices.map(d => `
       <tr onclick="viewDevice('${d.id}')" style="cursor:pointer" title="Click para ver detalles">
         <td><span class="type-icon">${TYPE_ICONS[d.type]||'📦'}</span> <span class="text-sm">${escHtml(d.type||'—')}</span></td>
-        <td><code style="font-size:0.8rem;color:var(--indigo-light)">${escHtml(d.universitySerial||'—')}</code></td>
-        <td class="td-muted">${escHtml(d.deviceSerial||'—')}</td>
+        <td>
+          <div class="flex items-center gap-xs">
+            <code style="font-size:0.8rem;color:var(--indigo-light)">${escHtml(d.universitySerial||'—')}</code>
+            ${d.universitySerial ? `<button class="btn btn-ghost btn-icon btn-xs" onclick="event.stopPropagation();copyToClipboard('${d.universitySerial}')" title="Copiar serial">📋</button>` : ''}
+          </div>
+        </td>
+        <td class="td-muted">
+          <div class="flex items-center gap-xs">
+            <span>${escHtml(d.deviceSerial||'—')}</span>
+            ${d.deviceSerial ? `<button class="btn btn-ghost btn-icon btn-xs" onclick="event.stopPropagation();copyToClipboard('${d.deviceSerial}')" title="Copiar serial">📋</button>` : ''}
+          </div>
+        </td>
         <td><strong>${escHtml(d.brand||'—')}</strong></td>
         <td><span class="badge ${STATUS_CLASS[d.status]||'badge-default'}">${escHtml(d.status||'Desconocido')}</span></td>
         <td class="td-muted" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(d.notes||'')}">
@@ -377,11 +395,17 @@
         <div class="flex gap-md flex-wrap">
           <div style="flex:1;min-width:200px">
             <div class="form-label">Serial Universitario</div>
-            <div style="font-weight:600;color:var(--indigo-light);margin-top:4px">${escHtml(d.universitySerial||'—')}</div>
+            <div class="flex items-center gap-sm" style="margin-top:4px">
+              <div style="font-weight:600;color:var(--indigo-light)">${escHtml(d.universitySerial||'—')}</div>
+              ${d.universitySerial ? `<button class="btn btn-ghost btn-icon btn-sm" onclick="copyToClipboard('${d.universitySerial}')">📋</button>` : ''}
+            </div>
           </div>
           <div style="flex:1;min-width:200px">
             <div class="form-label">Serial del Dispositivo</div>
-            <div style="font-weight:600;margin-top:4px">${escHtml(d.deviceSerial||'—')}</div>
+            <div class="flex items-center gap-sm" style="margin-top:4px">
+              <div style="font-weight:600">${escHtml(d.deviceSerial||'—')}</div>
+              ${d.deviceSerial ? `<button class="btn btn-ghost btn-icon btn-sm" onclick="copyToClipboard('${d.deviceSerial}')">📋</button>` : ''}
+            </div>
           </div>
         </div>
         <div class="flex gap-md flex-wrap">
@@ -499,6 +523,13 @@
     const btn = document.getElementById('btn-save-device');
     btn.classList.add('loading'); btn.disabled = true;
     try {
+      const dup = await checkDuplicateSerial(INV_ID, univSerial, devSerial, editingDeviceId);
+      if (dup) {
+        showToast(`Error: El serial ${dup.type} ya está registrado.`, 'error');
+        btn.classList.remove('loading'); btn.disabled = false;
+        return;
+      }
+
       await updateDevice(INV_ID, editingDeviceId, {
         universitySerial: univSerial, deviceSerial: devSerial,
         brand, type, status, notes,
@@ -545,6 +576,28 @@
     const fileName = `${invName.replace(/[^a-zA-Z0-9 ]/g,'_')}_${new Date().toISOString().slice(0,10)}.xlsx`;
     XLSX.writeFile(wb, fileName);
     showToast(`Excel exportado: ${fileName}`, 'success');
+  }
+
+  // ── DUPLICATE DETECTION (MODAL) ─────────────────────
+  let edDupTimeout = null;
+  function handleEditSerialInput() {
+    clearTimeout(edDupTimeout);
+    edDupTimeout = setTimeout(async () => {
+      const univ = document.getElementById('ed-univ-serial').value.trim();
+      const dev  = document.getElementById('ed-dev-serial').value.trim();
+      const dup  = await checkDuplicateSerial(INV_ID, univ, dev, editingDeviceId);
+      
+      document.getElementById('ed-dup-univ-msg').style.display = (dup && dup.type === 'universitario') ? 'block' : 'none';
+      document.getElementById('ed-dup-dev-msg').style.display  = (dup && dup.type === 'fabricante') ? 'block' : 'none';
+      document.getElementById('ed-univ-serial').style.borderColor = (dup && dup.type === 'universitario') ? 'var(--danger)' : '';
+      document.getElementById('ed-dev-serial').style.borderColor  = (dup && dup.type === 'fabricante') ? 'var(--danger)' : '';
+    }, 500);
+  }
+
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('Copiado al portapapeles', 'success', 2000);
+    });
   }
 </script>
 </body>

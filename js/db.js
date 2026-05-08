@@ -165,3 +165,27 @@ async function getDevice(inventoryId, deviceId) {
   if (!doc.exists) throw new Error('Dispositivo no encontrado');
   return { id: doc.id, ...doc.data() };
 }
+
+/**
+ * Verifica si un serial (universitario o de fabricante) ya existe en el inventario.
+ * Retorna el objeto del dispositivo duplicado si existe, o null.
+ */
+async function checkDuplicateSerial(inventoryId, univSerial, devSerial, excludeDeviceId = null) {
+  if (!univSerial && !devSerial) return null;
+  const devicesRef = db.collection('inventories').doc(inventoryId).collection('devices');
+  
+  if (univSerial) {
+    const snap = await devicesRef.where('universitySerial', '==', univSerial).get();
+    const dup = snap.docs.find(d => d.id !== excludeDeviceId);
+    if (dup) return { type: 'universitario', data: dup.data() };
+  }
+  
+  if (devSerial) {
+    const snap = await devicesRef.where('deviceSerial', '==', devSerial).get();
+    const dup = snap.docs.find(d => d.id !== excludeDeviceId);
+    if (dup) return { type: 'fabricante', data: dup.data() };
+  }
+  
+  return null;
+}
+
