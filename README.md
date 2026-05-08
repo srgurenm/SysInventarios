@@ -78,7 +78,7 @@ git commit -m "feat: initial SysInventarios setup"
 1. Crea un repo en [github.com](https://github.com) → `SysInventarios`
 
 ```bash
-git remote add origin https://github.com/TU_USUARIO/SysInventarios.git
+git remote add origin https://github.com/srgurenm/SysInventarios
 git branch -M main
 git push -u origin main
 ```
