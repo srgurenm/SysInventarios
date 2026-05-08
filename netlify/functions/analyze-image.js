@@ -11,6 +11,7 @@ Campos a extraer:
 - universitySerial: Serial/código propio de la institución (busca stickers o etiquetas con códigos institucionales, inventario, o activos fijos)
 - deviceSerial: Serial del fabricante del dispositivo (busca en la parte trasera o etiquetas del fabricante)
 - brand: Marca del dispositivo (Dell, HP, Lenovo, Samsung, LG, Apple, Acer, Asus, Toshiba, etc.)
+- model: Modelo específico del equipo si es visible (ej: "ThinkPad X1 Carbon", "Vostro 3400", "OptiPlex 7050", "EliteBook 840", etc.)
 - type: Tipo de dispositivo. Debe ser uno de: "Computador de Escritorio", "Portátil/Laptop", "Pantalla/Monitor", "All-in-One", "Tablet", "Impresora", "Servidor", "Switch/Router", "Proyector", "Otro"
 - specs: Especificaciones técnicas (objeto con los campos siguientes, usa null si no es visible):
   - processor: Procesador (ej: "Intel Core i5-8400")
@@ -31,7 +32,8 @@ Ejemplo de respuesta:
   "universitySerial": "UNIV-2024-001234",
   "deviceSerial": "CN123456789",
   "brand": "HP",
-  "type": "Computador de Escritorio",
+  "model": "EliteBook 840 G5",
+  "type": "Portátil/Laptop",
   "specs": {
     "processor": "Intel Core i5-8400",
     "ram": "8GB DDR4",

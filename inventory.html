@@ -114,9 +114,9 @@
         <thead>
           <tr>
             <th>Tipo</th>
+            <th>Marca / Modelo</th>
             <th>Serial Univ.</th>
             <th>Serial Disp.</th>
-            <th>Marca</th>
             <th>Estado</th>
             <th>Notas</th>
             <th>Agregado</th>
@@ -210,6 +210,9 @@
       </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label required">Marca</label><input type="text" id="ed-brand" class="form-input"></div>
+        <div class="form-group"><label class="form-label">Modelo</label><input type="text" id="ed-model" class="form-input"></div>
+      </div>
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label required">Tipo</label>
           <select id="ed-type" class="form-select">
@@ -417,6 +420,10 @@
       <tr onclick="viewDevice('${d.id}')" style="cursor:pointer" title="Click para ver detalles">
         <td><span class="type-icon">${TYPE_ICONS[d.type]||'📦'}</span> <span class="text-sm">${escHtml(d.type||'—')}</span></td>
         <td>
+          <strong>${escHtml(d.brand||'—')}</strong>
+          <div class="text-xs text-muted">${escHtml(d.model||'—')}</div>
+        </td>
+        <td>
           <div class="flex items-center gap-xs">
             <code style="font-size:0.8rem;color:var(--indigo-light)">${escHtml(d.universitySerial||'—')}</code>
             ${d.universitySerial ? `<button class="btn btn-ghost btn-icon btn-xs" onclick="event.stopPropagation();copyToClipboard('${d.universitySerial}')" title="Copiar serial">📋</button>` : ''}
@@ -470,6 +477,7 @@
         </div>
         <div class="flex gap-md flex-wrap">
           <div style="flex:1"><div class="form-label">Marca</div><div style="margin-top:4px">${escHtml(d.brand||'—')}</div></div>
+          <div style="flex:1"><div class="form-label">Modelo</div><div style="margin-top:4px">${escHtml(d.model||'—')}</div></div>
           <div style="flex:1"><div class="form-label">Tipo</div><div style="margin-top:4px">${escHtml(d.type||'—')}</div></div>
           <div style="flex:1"><div class="form-label">Estado</div>
             <div style="margin-top:4px"><span class="badge ${STATUS_CLASS[d.status]||'badge-default'}">${escHtml(d.status||'Desconocido')}</span></div>
@@ -555,6 +563,7 @@
     document.getElementById('ed-univ-serial').value = d.universitySerial || '';
     document.getElementById('ed-dev-serial').value  = d.deviceSerial     || '';
     document.getElementById('ed-brand').value       = d.brand            || '';
+    document.getElementById('ed-model').value       = d.model            || '';
     document.getElementById('ed-type').value        = d.type             || '';
     document.getElementById('ed-proc').value        = d.specs?.processor || '';
     document.getElementById('ed-ram').value         = d.specs?.ram       || '';
@@ -573,6 +582,7 @@
     const univSerial = document.getElementById('ed-univ-serial').value.trim();
     const devSerial  = document.getElementById('ed-dev-serial').value.trim();
     const brand      = document.getElementById('ed-brand').value.trim();
+    const model      = document.getElementById('ed-model').value.trim();
     const type       = document.getElementById('ed-type').value;
     const status     = document.querySelector('input[name="ed-status"]:checked')?.value || 'Desconocido';
     const notes      = document.getElementById('ed-notes').value.trim();
@@ -592,7 +602,7 @@
 
       await updateDevice(INV_ID, editingDeviceId, {
         universitySerial: univSerial, deviceSerial: devSerial,
-        brand, type, status, notes,
+        brand, model, type, status, notes,
         specs: {
           processor: document.getElementById('ed-proc').value.trim()    || null,
           ram:       document.getElementById('ed-ram').value.trim()      || null,
@@ -616,6 +626,7 @@
       'Serial Universitario': d.universitySerial || '',
       'Serial Dispositivo':   d.deviceSerial     || '',
       'Marca':                d.brand            || '',
+      'Modelo':               d.model            || '',
       'Tipo':                 d.type             || '',
       'Estado':               d.status           || '',
       'Procesador':           d.specs?.processor || '',

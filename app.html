@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,248 +8,354 @@
   <title>Dashboard — SysInventarios</title>
   <link rel="stylesheet" href="css/main.css">
   <style>
-    .inv-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px; }
+    .inv-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
     .inv-card {
-      background:var(--bg-card); border:1px solid var(--border);
-      border-radius:var(--radius-lg); padding:24px; cursor:pointer;
-      transition:all 0.2s var(--ease); position:relative; overflow:hidden;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.2s var(--ease);
+      position: relative;
+      overflow: hidden;
     }
+
     .inv-card::before {
-      content:''; position:absolute; top:0; left:0; right:0; height:3px;
-      background:var(--gradient); transform:scaleX(0); transform-origin:left;
-      transition:transform 0.3s var(--ease);
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--gradient);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s var(--ease);
     }
-    .inv-card:hover { border-color:var(--border-hover); transform:translateY(-3px); box-shadow:var(--shadow-lg),var(--shadow-glow); }
-    .inv-card:hover::before { transform:scaleX(1); }
-    .inv-icon { font-size:2rem; margin-bottom:12px; }
-    .inv-name { font-size:1.125rem; font-weight:700; margin-bottom:6px; }
-    .inv-desc { font-size:0.8375rem; color:var(--text-secondary); margin-bottom:16px; line-height:1.5; }
-    .inv-meta { display:flex; align-items:center; justify-content:space-between; }
-    .inv-count { font-size:1.5rem; font-weight:800; color:var(--indigo-light); }
-    .inv-count-label { font-size:0.75rem; color:var(--text-muted); }
-    .inv-date { font-size:0.75rem; color:var(--text-muted); text-align:right; }
+
+    .inv-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg), var(--shadow-glow);
+    }
+
+    .inv-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .inv-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+
+    .inv-name {
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .inv-desc {
+      font-size: 0.8375rem;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .inv-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .inv-count {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--indigo-light);
+    }
+
+    .inv-count-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .inv-date {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: right;
+    }
 
     /* Real-time dot */
     .live-dot {
-      display:inline-flex; align-items:center; gap:6px;
-      font-size:0.75rem; color:var(--success); font-weight:600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: var(--success);
+      font-weight: 600;
     }
+
     .live-dot::before {
-      content:''; width:8px; height:8px; background:var(--success);
-      border-radius:50%; animation:pulse 2s ease-in-out infinite;
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
     }
 
     /* Stats row */
     .stats-bar {
-      display:flex; gap:24px; flex-wrap:wrap;
-      padding:20px 24px; background:var(--bg-card);
-      border:1px solid var(--border); border-radius:var(--radius-lg);
-      margin-bottom:28px;
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      padding: 20px 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 28px;
     }
-    .stat-item { display:flex; flex-direction:column; }
-    .stat-num  { font-size:1.75rem; font-weight:800; line-height:1; }
-    .stat-lbl  { font-size:0.75rem; color:var(--text-secondary); margin-top:2px; }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-num {
+      font-size: 1.75rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .stat-lbl {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
 
     /* Search & Filter bar */
-    .controls-bar { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px; align-items:center; }
-    .search-bar { flex:1; min-width:200px; position:relative; }
-    .search-bar .search-icon { position:absolute; left:13px; top:50%; transform:translateY(-50%); font-size:0.9rem; color:var(--text-muted); pointer-events:none; }
-    .search-bar input { padding-left:38px; }
+    .controls-bar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+
+    .search-bar {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+
+    .search-bar .search-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-bar input {
+      padding-left: 38px;
+    }
   </style>
 </head>
+
 <body>
-<div class="app-layout">
-  <!-- Sidebar -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <div class="sidebar-brand-icon">🖥️</div>
-      <div>
-        <div class="sidebar-brand-name">SysInventarios</div>
-        <div class="sidebar-brand-sub">Panel de Control</div>
-      </div>
-    </div>
-    <nav class="sidebar-nav">
-      <div class="sidebar-section-title">Navegación</div>
-      <a href="app.html"       class="sidebar-link active"><span class="icon">📦</span> Mis Inventarios</a>
-      <div class="sidebar-section-title" style="margin-top:16px">Cuenta</div>
-      <button class="sidebar-link" onclick="handleLogout()"><span class="icon">🚪</span> Cerrar Sesión</button>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="user-info">
-        <div class="user-avatar" id="user-avatar">?</div>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">🖥️</div>
         <div>
-          <div class="user-name"  id="user-name">Cargando...</div>
-          <div class="user-email" id="user-email"></div>
+          <div class="sidebar-brand-name">SysInventarios</div>
+          <div class="sidebar-brand-sub">Panel de Control</div>
         </div>
       </div>
-    </div>
-  </aside>
-  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-title">Navegación</div>
+        <a href="app.html" class="sidebar-link active"><span class="icon">📦</span> Mis Inventarios</a>
+        <div class="sidebar-section-title" style="margin-top:16px">Cuenta</div>
+        <button class="sidebar-link" onclick="handleLogout()"><span class="icon">🚪</span> Cerrar Sesión</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="user-avatar">?</div>
+          <div>
+            <div class="user-name" id="user-name">Cargando...</div>
+            <div class="user-email" id="user-email"></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-  <!-- Main -->
-  <main class="main-content">
-    <div class="page-header">
-      <div>
-        <button class="hamburger btn btn-ghost btn-icon" id="hamburger">☰</button>
-        <h1 class="page-title">Inventarios</h1>
-        <p class="page-subtitle">Gestiona los equipos de tu institución en tiempo real</p>
+    <!-- Main -->
+    <main class="main-content">
+      <div class="page-header">
+        <div>
+          <button class="hamburger btn btn-ghost btn-icon" id="hamburger">☰</button>
+          <h1 class="page-title">Inventarios</h1>
+          <p class="page-subtitle">Gestiona los equipos de tu institución en tiempo real</p>
+        </div>
+        <div class="flex gap-sm">
+          <button class="btn btn-primary" onclick="openModal('modal-new-inv')">
+            ➕ Nuevo Inventario
+          </button>
+        </div>
       </div>
-      <div class="flex gap-sm">
-        <button class="btn btn-primary" onclick="openModal('modal-new-inv')">
-          ➕ Nuevo Inventario
-        </button>
-      </div>
-    </div>
 
-    <!-- Stats -->
-    <div class="stats-bar" id="stats-bar">
-      <div class="stat-item">
-        <span class="stat-num gradient-text" id="stat-inv">—</span>
-        <span class="stat-lbl">Inventarios</span>
+      <!-- Stats -->
+      <div class="stats-bar" id="stats-bar">
+        <div class="stat-item">
+          <span class="stat-num gradient-text" id="stat-inv">—</span>
+          <span class="stat-lbl">Inventarios</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num gradient-text" id="stat-devices">—</span>
+          <span class="stat-lbl">Equipos totales</span>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;">
+          <span class="live-dot">En vivo</span>
+        </div>
       </div>
-      <div class="stat-item">
-        <span class="stat-num gradient-text" id="stat-devices">—</span>
-        <span class="stat-lbl">Equipos totales</span>
-      </div>
-      <div style="margin-left:auto;display:flex;align-items:center;">
-        <span class="live-dot">En vivo</span>
-      </div>
-    </div>
 
-    <!-- Controls -->
-    <div class="controls-bar">
-      <div class="search-bar">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="search-inv" class="form-input" placeholder="Buscar inventario...">
+      <!-- Controls -->
+      <div class="controls-bar">
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-inv" class="form-input" placeholder="Buscar inventario...">
+        </div>
       </div>
-    </div>
 
-    <!-- Inventory Grid -->
-    <div class="inv-grid" id="inv-grid">
-      <!-- Loaded dynamically -->
-    </div>
-    <div id="empty-state" style="display:none">
-      <div class="empty-state" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:60px 40px;box-shadow:var(--shadow-lg);text-align:center;">
-        <div class="empty-state-icon" style="font-size:4rem;margin-bottom:24px;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">📦</div>
-        <h3 class="empty-state-title" style="font-size:1.5rem;margin-bottom:12px;">Tu inventario está vacío</h3>
-        <p class="empty-state-text" style="max-width:400px;margin:0 auto 24px;color:var(--text-secondary);">Organiza todos tus activos electrónicos en un solo lugar. Comienza creando tu primer inventario institucional.</p>
-        <button class="btn btn-primary btn-lg" onclick="openModal('modal-new-inv')" style="padding:12px 32px;font-weight:600;box-shadow:var(--shadow-glow);">
-          ➕ Crear Primer Inventario
-        </button>
+      <!-- Inventory Grid -->
+      <div class="inv-grid" id="inv-grid">
+        <!-- Loaded dynamically -->
       </div>
-    </div>
-    
-    <!-- Floating Action Button for Mobile -->
-    <button class="fab" onclick="openModal('modal-new-inv')" title="Nuevo Inventario">
-      ➕
-    </button>
-  </main>
-</div>
+      <div id="empty-state" style="display:none">
+        <div class="empty-state">
+          <div class="empty-state-icon">📦</div>
+          <h3 class="empty-state-title">Sin inventarios aún</h3>
+          <p class="empty-state-text">Crea tu primer inventario para comenzar a registrar equipos electrónicos.</p>
+          <button class="btn btn-primary" onclick="openModal('modal-new-inv')" style="margin-top:16px">
+            ➕ Crear Inventario
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
 
-<!-- MODAL: Nuevo Inventario -->
-<div class="modal-backdrop" id="modal-new-inv">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 class="modal-title">Nuevo Inventario</h3>
-      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-new-inv')">✕</button>
-    </div>
-    <div class="flex flex-col gap-md">
-      <div class="form-group">
-        <label class="form-label required">Nombre del Inventario</label>
-        <input type="text" id="inv-name" class="form-input" placeholder="Ej: Sala de Cómputo 201">
+  <!-- MODAL: Nuevo Inventario -->
+  <div class="modal-backdrop" id="modal-new-inv">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Nuevo Inventario</h3>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-new-inv')">✕</button>
       </div>
-      <div class="form-group">
-        <label class="form-label">Descripción</label>
-        <textarea id="inv-desc" class="form-textarea" placeholder="Descripción opcional del inventario..."></textarea>
+      <div class="flex flex-col gap-md">
+        <div class="form-group">
+          <label class="form-label required">Nombre del Inventario</label>
+          <input type="text" id="inv-name" class="form-input" placeholder="Ej: Sala de Cómputo 201">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descripción</label>
+          <textarea id="inv-desc" class="form-textarea" placeholder="Descripción opcional del inventario..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label required">Contraseña del Inventario</label>
+          <input type="password" id="inv-pw" class="form-input" placeholder="Contraseña para editar este inventario">
+          <span class="form-hint">Solo quienes tengan esta contraseña podrán agregar o editar equipos.</span>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label required">Contraseña del Inventario</label>
-        <input type="password" id="inv-pw" class="form-input" placeholder="Contraseña para editar este inventario">
-        <span class="form-hint">Solo quienes tengan esta contraseña podrán agregar o editar equipos.</span>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-new-inv')">Cancelar</button>
+        <button class="btn btn-primary" id="btn-create-inv" onclick="handleCreateInventory()">Crear Inventario</button>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-new-inv')">Cancelar</button>
-      <button class="btn btn-primary" id="btn-create-inv" onclick="handleCreateInventory()">Crear Inventario</button>
     </div>
   </div>
-</div>
 
-<!-- MODAL: Ingresar Contraseña -->
-<div class="modal-backdrop" id="modal-pw-entry">
-  <div class="modal" style="max-width:400px">
-    <div class="modal-header">
-      <h3 class="modal-title">Acceder al Inventario</h3>
-      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-pw-entry')">✕</button>
-    </div>
-    <p style="color:var(--text-secondary);margin-bottom:20px;font-size:0.9rem;">
-      Ingresa la contraseña para acceder y editar <strong id="pw-entry-inv-name"></strong>.
-    </p>
-    <div class="form-group">
-      <label class="form-label required">Contraseña</label>
-      <input type="password" id="entry-pw" class="form-input" placeholder="••••••••">
-    </div>
-    <div id="pw-entry-error" style="display:none;color:var(--danger);font-size:0.85rem;margin-top:8px;"></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-pw-entry')">Cancelar</button>
-      <button class="btn btn-primary" id="btn-entry-pw" onclick="handlePasswordEntry()">Acceder</button>
+  <!-- MODAL: Ingresar Contraseña -->
+  <div class="modal-backdrop" id="modal-pw-entry">
+    <div class="modal" style="max-width:400px">
+      <div class="modal-header">
+        <h3 class="modal-title">Acceder al Inventario</h3>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-pw-entry')">✕</button>
+      </div>
+      <p style="color:var(--text-secondary);margin-bottom:20px;font-size:0.9rem;">
+        Ingresa la contraseña para acceder y editar <strong id="pw-entry-inv-name"></strong>.
+      </p>
+      <div class="form-group">
+        <label class="form-label required">Contraseña</label>
+        <input type="password" id="entry-pw" class="form-input" placeholder="••••••••">
+      </div>
+      <div id="pw-entry-error" style="display:none;color:var(--danger);font-size:0.85rem;margin-top:8px;"></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-pw-entry')">Cancelar</button>
+        <button class="btn btn-primary" id="btn-entry-pw" onclick="handlePasswordEntry()">Acceder</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-<!-- bcryptjs for client-side password hashing -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
-<script src="js/firebase-config.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/db.js"></script>
-<script>
-  let currentUser = null;
-  let allInventories = [];
-  let pendingInventoryId = null;
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <!-- bcryptjs for client-side password hashing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/db.js"></script>
+  <script>
+    let currentUser = null;
+    let allInventories = [];
+    let pendingInventoryId = null;
 
-  // ── AUTH GUARD ────────────────────────────────────────
-  requireAuth().then(user => {
-    currentUser = user;
-    document.getElementById('user-name').textContent  = user.displayName || 'Usuario';
-    document.getElementById('user-email').textContent = user.email;
-    document.getElementById('user-avatar').textContent =
-      (user.displayName || user.email).charAt(0).toUpperCase();
-    loadInventories();
-  });
-
-  // ── SIDEBAR ───────────────────────────────────────────
-  initSidebar();
-
-  // ── LOAD INVENTORIES (real-time) ──────────────────────
-  function loadInventories() {
-    listenInventories(inventories => {
-      allInventories = inventories;
-      renderInventories(inventories);
-      updateStats(inventories);
+    //  AUTH GUARD 
+    requireAuth().then(user => {
+      currentUser = user;
+      document.getElementById('user-name').textContent = user.displayName || 'Usuario';
+      document.getElementById('user-email').textContent = user.email;
+      document.getElementById('user-avatar').textContent =
+        (user.displayName || user.email).charAt(0).toUpperCase();
+      loadInventories();
     });
-  }
 
-  function updateStats(inventories) {
-    document.getElementById('stat-inv').textContent     = inventories.length;
-    const total = inventories.reduce((s, i) => s + (i.deviceCount || 0), 0);
-    document.getElementById('stat-devices').textContent = total;
-  }
+    //  SIDEBAR 
+    initSidebar();
 
-  const ICONS = ['📦','🖥️','💻','🖨️','📱','⌨️','🗄️','📡'];
-  function renderInventories(list) {
-    const grid  = document.getElementById('inv-grid');
-    const empty = document.getElementById('empty-state');
-    if (list.length === 0) {
-      grid.innerHTML = ''; empty.style.display = '';
-      return;
+    //  LOAD INVENTORIES  
+    function loadInventories() {
+      listenInventories(inventories => {
+        allInventories = inventories;
+        renderInventories(inventories);
+        updateStats(inventories);
+      });
     }
-    empty.style.display = 'none';
-    grid.innerHTML = list.map((inv, i) => `
+
+    function updateStats(inventories) {
+      document.getElementById('stat-inv').textContent = inventories.length;
+      const total = inventories.reduce((s, i) => s + (i.deviceCount || 0), 0);
+      document.getElementById('stat-devices').textContent = total;
+    }
+
+    const ICONS = ['📦', '🖥️', '💻', '🖨️', '📱', '⌨️', '🗄️', '📡'];
+    function renderInventories(list) {
+      const grid = document.getElementById('inv-grid');
+      const empty = document.getElementById('empty-state');
+      if (list.length === 0) {
+        grid.innerHTML = ''; empty.style.display = '';
+        return;
+      }
+      empty.style.display = 'none';
+      grid.innerHTML = list.map((inv, i) => `
       <div class="inv-card fade-in" onclick="selectInventory('${inv.id}','${escHtml(inv.name)}')"
            style="animation-delay:${i * 0.05}s">
         <div class="inv-icon">${ICONS[i % ICONS.length]}</div>
@@ -263,93 +370,94 @@
         </div>
       </div>
     `).join('');
-  }
-
-  // ── SEARCH ────────────────────────────────────────────
-  document.getElementById('search-inv').addEventListener('input', e => {
-    const q = e.target.value.toLowerCase();
-    renderInventories(allInventories.filter(i =>
-      i.name.toLowerCase().includes(q) || (i.description || '').toLowerCase().includes(q)
-    ));
-  });
-
-  // ── CREATE INVENTORY ──────────────────────────────────
-  async function handleCreateInventory() {
-    const name = document.getElementById('inv-name').value.trim();
-    const desc = document.getElementById('inv-desc').value.trim();
-    const pw   = document.getElementById('inv-pw').value;
-    if (!name) { showToast('El nombre es obligatorio.', 'warning'); return; }
-    if (pw.length < 4) { showToast('La contraseña debe tener al menos 4 caracteres.', 'warning'); return; }
-
-    const btn = document.getElementById('btn-create-inv');
-    btn.classList.add('loading'); btn.disabled = true;
-    try {
-      await createInventory(name, desc, pw, currentUser.uid);
-      closeModal('modal-new-inv');
-      document.getElementById('inv-name').value = '';
-      document.getElementById('inv-desc').value = '';
-      document.getElementById('inv-pw').value   = '';
-      showToast(`Inventario "${name}" creado exitosamente.`, 'success');
-    } catch (e) {
-      showToast('Error al crear el inventario: ' + e.message, 'error');
-    } finally {
-      btn.classList.remove('loading'); btn.disabled = false;
     }
-  }
 
-  // ── SELECT INVENTORY (password check) ─────────────────
-  function selectInventory(id, name) {
-    pendingInventoryId = id;
-    document.getElementById('pw-entry-inv-name').textContent = name;
-    document.getElementById('entry-pw').value = '';
-    document.getElementById('pw-entry-error').style.display = 'none';
-    openModal('modal-pw-entry');
-    setTimeout(() => document.getElementById('entry-pw').focus(), 300);
-  }
+    //  SEARCH 
+    document.getElementById('search-inv').addEventListener('input', e => {
+      const q = e.target.value.toLowerCase();
+      renderInventories(allInventories.filter(i =>
+        i.name.toLowerCase().includes(q) || (i.description || '').toLowerCase().includes(q)
+      ));
+    });
 
-  async function handlePasswordEntry() {
-    const pw  = document.getElementById('entry-pw').value;
-    const err = document.getElementById('pw-entry-error');
-    const btn = document.getElementById('btn-entry-pw');
-    if (!pw) { err.textContent = 'Ingresa la contraseña.'; err.style.display = ''; return; }
+    //  CREATE INVENTORY 
+    async function handleCreateInventory() {
+      const name = document.getElementById('inv-name').value.trim();
+      const desc = document.getElementById('inv-desc').value.trim();
+      const pw = document.getElementById('inv-pw').value;
+      if (!name) { showToast('El nombre es obligatorio.', 'warning'); return; }
+      if (pw.length < 4) { showToast('La contraseña debe tener al menos 4 caracteres.', 'warning'); return; }
 
-    btn.classList.add('loading'); btn.disabled = true;
-    try {
-      const ok = await verifyInventoryPassword(pendingInventoryId, pw);
-      if (ok) {
-        // Store session access (sessionStorage only – not persisted)
-        sessionStorage.setItem(`inv_access_${pendingInventoryId}`, '1');
-        closeModal('modal-pw-entry');
-        window.location.href = `inventory.html?id=${pendingInventoryId}`;
-      } else {
-        err.textContent = 'Contraseña incorrecta. Inténtalo de nuevo.';
-        err.style.display = '';
-        document.getElementById('entry-pw').value = '';
+      const btn = document.getElementById('btn-create-inv');
+      btn.classList.add('loading'); btn.disabled = true;
+      try {
+        await createInventory(name, desc, pw, currentUser.uid);
+        closeModal('modal-new-inv');
+        document.getElementById('inv-name').value = '';
+        document.getElementById('inv-desc').value = '';
+        document.getElementById('inv-pw').value = '';
+        showToast(`Inventario "${name}" creado exitosamente.`, 'success');
+      } catch (e) {
+        showToast('Error al crear el inventario: ' + e.message, 'error');
+      } finally {
+        btn.classList.remove('loading'); btn.disabled = false;
       }
-    } catch (e) {
-      err.textContent = 'Error al verificar: ' + e.message;
-      err.style.display = '';
-    } finally {
-      btn.classList.remove('loading'); btn.disabled = false;
     }
-  }
 
-  // Enter key on password modal
-  document.getElementById('entry-pw')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter') handlePasswordEntry();
-  });
+    // SELECT INVENTORY (password check) 
+    function selectInventory(id, name) {
+      pendingInventoryId = id;
+      document.getElementById('pw-entry-inv-name').textContent = name;
+      document.getElementById('entry-pw').value = '';
+      document.getElementById('pw-entry-error').style.display = 'none';
+      openModal('modal-pw-entry');
+      setTimeout(() => document.getElementById('entry-pw').focus(), 300);
+    }
 
-  // ── LOGOUT ───────────────────────────────────────────
-  async function handleLogout() {
-    await auth.signOut();
-    window.location.href = 'index.html';
-  }
+    async function handlePasswordEntry() {
+      const pw = document.getElementById('entry-pw').value;
+      const err = document.getElementById('pw-entry-error');
+      const btn = document.getElementById('btn-entry-pw');
+      if (!pw) { err.textContent = 'Ingresa la contraseña.'; err.style.display = ''; return; }
 
-  // ── UTILS ────────────────────────────────────────────
-  function escHtml(str) {
-    const d = document.createElement('div');
-    d.textContent = str; return d.innerHTML;
-  }
-</script>
+      btn.classList.add('loading'); btn.disabled = true;
+      try {
+        const ok = await verifyInventoryPassword(pendingInventoryId, pw);
+        if (ok) {
+          // Store session access (sessionStorage only – not persisted)
+          sessionStorage.setItem(`inv_access_${pendingInventoryId}`, '1');
+          closeModal('modal-pw-entry');
+          window.location.href = `inventory.html?id=${pendingInventoryId}`;
+        } else {
+          err.textContent = 'Contraseña incorrecta. Inténtalo de nuevo.';
+          err.style.display = '';
+          document.getElementById('entry-pw').value = '';
+        }
+      } catch (e) {
+        err.textContent = 'Error al verificar: ' + e.message;
+        err.style.display = '';
+      } finally {
+        btn.classList.remove('loading'); btn.disabled = false;
+      }
+    }
+
+    // Enter key on password modal
+    document.getElementById('entry-pw')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handlePasswordEntry();
+    });
+
+    //  LOGOUT 
+    async function handleLogout() {
+      await auth.signOut();
+      window.location.href = 'index.html';
+    }
+
+    //  UTILS 
+    function escHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str; return d.innerHTML;
+    }
+  </script>
 </body>
+
 </html>

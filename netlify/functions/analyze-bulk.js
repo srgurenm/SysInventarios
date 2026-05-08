@@ -11,6 +11,7 @@ Nuestra estructura objetivo (Schema):
 - universitySerial: Serial institucional / placa de inventario.
 - deviceSerial: Serial del fabricante (S/N, Serial Number).
 - brand: Marca (HP, Dell, Lenovo, LG, etc.).
+- model: Modelo comercial (ej: "Latitude 3420", "MacBook Pro", "ThinkCentre M70", etc.).
 - type: Tipo de dispositivo. DEBE ser uno de: "Computador de Escritorio", "Portátil/Laptop", "Pantalla/Monitor", "All-in-One", "Tablet", "Impresora", "Servidor", "Switch/Router", "Proyector", "Otro".
 - specs: Objeto con (processor, ram, storage, screen, os, other).
 - status: "Funcional", "No Funcional" o "Desconocido".

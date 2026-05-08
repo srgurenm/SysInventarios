@@ -184,6 +184,14 @@
             <input type="text" id="f-brand" class="form-input" placeholder="Ej: HP, Dell, Lenovo...">
           </div>
           <div class="form-group">
+            <label class="form-label" for="f-model">Modelo <span id="lbl-model"></span></label>
+            <input type="text" id="f-model" class="form-input" placeholder="Ej: ThinkPad X1, Vostro 3400...">
+          </div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="form-row">
+          <div class="form-group">
             <label class="form-label required" for="f-type">Tipo de Dispositivo <span id="lbl-type"></span></label>
             <select id="f-type" class="form-select">
               <option value="">— Selecciona —</option>
@@ -417,6 +425,7 @@
     setVal('f-univ-serial', data.universitySerial, 'lbl-univ-serial');
     setVal('f-dev-serial',  data.deviceSerial,     'lbl-dev-serial');
     setVal('f-brand',       data.brand,            'lbl-brand');
+    setVal('f-model',       data.model,            'lbl-model');
 
     if (data.type) {
       const sel = document.getElementById('f-type');
@@ -467,6 +476,7 @@
     const univSerial = document.getElementById('f-univ-serial').value.trim();
     const devSerial  = document.getElementById('f-dev-serial').value.trim();
     const brand      = document.getElementById('f-brand').value.trim();
+    const model      = document.getElementById('f-model').value.trim();
     const type       = document.getElementById('f-type').value;
     const status     = document.querySelector('input[name="status"]:checked')?.value || 'Desconocido';
     const notes      = document.getElementById('f-notes').value.trim();
@@ -479,7 +489,7 @@
     const deviceData = {
       universitySerial: univSerial,
       deviceSerial:     devSerial,
-      brand, type, status, notes,
+      brand, model, type, status, notes,
       specs: {
         processor: document.getElementById('f-proc').value.trim()    || null,
         ram:       document.getElementById('f-ram').value.trim()      || null,
