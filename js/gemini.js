@@ -62,7 +62,7 @@ async function fileToBase64(file) {
  * @param {File[]} files - Entre 1 y 4 imágenes
  * @returns {Promise<object>} Datos extraídos
  */
-async function analyzeImagesWithGemini(files) {
+async function analyzeImagesWithGemini(files, retryCount = 0) {
   if (!files || files.length === 0) throw new Error('Debes seleccionar al menos una imagen.');
   if (files.length > 4) throw new Error('Máximo 4 imágenes permitidas.');
 
@@ -72,7 +72,7 @@ async function analyzeImagesWithGemini(files) {
     if (!allowed.includes(f.type)) {
       throw new Error(`Formato no soportado: ${f.name}. Usa JPG, PNG o WebP.`);
     }
-    if (f.size > 8 * 1024 * 1024) { // 8MB per image limit for Gemini
+    if (f.size > 8 * 1024 * 1024) {
       throw new Error(`La imagen ${f.name} supera el límite de 8MB.`);
     }
   }
@@ -87,6 +87,14 @@ async function analyzeImagesWithGemini(files) {
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
+    
+    // Si es error de cuota (429) y no hemos reintentado mucho, esperar y reintentar
+    if (response.status === 429 && retryCount < 2) {
+      console.log(`Cuota excedida. Reintentando en ${2 * (retryCount + 1)} segundos...`);
+      await new Promise(r => setTimeout(r, 2000 * (retryCount + 1)));
+      return analyzeImagesWithGemini(files, retryCount + 1);
+    }
+
     throw new Error(err.error || `Error ${response.status} al contactar Gemini.`);
   }
 
