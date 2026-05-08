@@ -135,6 +135,11 @@
         <a id="btn-add-device-empty" href="#" class="btn btn-primary" style="margin-top:16px">➕ Agregar Equipo con IA</a>
       </div>
     </div>
+
+    <!-- Floating Action Button for Mobile -->
+    <a id="fab-add-device" class="fab" href="#" title="Agregar Equipo">
+      ➕
+    </a>
   </main>
 </div>
 
@@ -297,6 +302,7 @@
       const url = `add-device.html?inv=${INV_ID}`;
       document.getElementById('btn-add-device').href       = url;
       document.getElementById('btn-add-device-empty').href = url;
+      document.getElementById('fab-add-device').href       = url;
     });
 
     // Start real-time listener
