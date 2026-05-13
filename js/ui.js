@@ -3,7 +3,7 @@
  * Toast notifications, modals, loading states
  */
 
-// ─── TOAST ────────────────────────────────────────────────
+// TOAST
 const toastContainer = (() => {
   let el = document.getElementById('toast-container');
   if (!el) {
@@ -34,7 +34,7 @@ function showToast(message, type = 'success', duration = 4000) {
   toast.addEventListener('click', () => { clearTimeout(timer); remove(); });
 }
 
-// ─── MODAL ────────────────────────────────────────────────
+// MODAL
 function openModal(id) {
   const m = document.getElementById(id);
   if (m) { m.classList.add('open'); document.body.style.overflow = 'hidden'; }
@@ -63,7 +63,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// ─── LOADING ──────────────────────────────────────────────
+// LOADING
 function showLoading(message = 'Cargando...') {
   let overlay = document.getElementById('loading-overlay');
   if (!overlay) {
@@ -82,10 +82,10 @@ function hideLoading() {
   if (overlay) overlay.remove();
 }
 
-// ─── SIDEBAR (MOBILE) ─────────────────────────────────────
+// SIDEBAR (MOBILE)
 function initSidebar() {
-  const sidebar  = document.querySelector('.sidebar');
-  const overlay  = document.querySelector('.sidebar-overlay');
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.querySelector('.sidebar-overlay');
   const hamburger = document.querySelector('.hamburger');
   if (!sidebar || !overlay || !hamburger) return;
 
@@ -99,7 +99,7 @@ function initSidebar() {
   });
 }
 
-// ─── CONFIRM DIALOG ────────────────────────────────────────
+// CONFIRM DIALOG
 function confirmDialog(message, title = '¿Estás seguro?') {
   return new Promise(resolve => {
     const id = 'confirm-dialog';
@@ -123,36 +123,36 @@ function confirmDialog(message, title = '¿Estás seguro?') {
       document.body.appendChild(el);
     }
     document.getElementById('confirm-title').textContent = title;
-    document.getElementById('confirm-msg').textContent   = message;
+    document.getElementById('confirm-msg').textContent = message;
     openModal(id);
 
-    const ok     = document.getElementById('confirm-ok');
+    const ok = document.getElementById('confirm-ok');
     const cancel = document.getElementById('confirm-cancel');
     const cleanup = (val) => { closeModal(id); resolve(val); };
-    ok.onclick     = () => cleanup(true);
+    ok.onclick = () => cleanup(true);
     cancel.onclick = () => cleanup(false);
     el.onclick = (e) => { if (e.target === el) cleanup(false); };
   });
 }
 
-// ─── DATE FORMAT ──────────────────────────────────────────
+// DATE FORMAT
 function formatDate(ts) {
   if (!ts) return '—';
   const d = ts.toDate ? ts.toDate() : new Date(ts);
-  return d.toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' });
+  return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function timeAgo(ts) {
   if (!ts) return '—';
-  const d   = ts.toDate ? ts.toDate() : new Date(ts);
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
   const sec = Math.floor((Date.now() - d.getTime()) / 1000);
-  if (sec < 60)   return 'hace un momento';
-  if (sec < 3600) return `hace ${Math.floor(sec/60)} min`;
-  if (sec < 86400)return `hace ${Math.floor(sec/3600)} h`;
+  if (sec < 60) return 'hace un momento';
+  if (sec < 3600) return `hace ${Math.floor(sec / 60)} min`;
+  if (sec < 86400) return `hace ${Math.floor(sec / 3600)} h`;
   return formatDate(ts);
 }
 
-// ─── AUTH GUARD ───────────────────────────────────────────
+// AUTH GUARD
 function requireAuth(redirectTo = 'index.html') {
   return new Promise((resolve) => {
     const unsub = auth.onAuthStateChanged(user => {

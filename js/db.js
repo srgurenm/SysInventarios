@@ -29,9 +29,9 @@ async function createInventory(name, description, password, uid) {
     name,
     description,
     passwordHash,
-    createdBy:  uid,
-    createdAt:  firebase.firestore.FieldValue.serverTimestamp(),
-    updatedAt:  firebase.firestore.FieldValue.serverTimestamp(),
+    createdBy: uid,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     deviceCount: 0,
   });
   return ref.id;
@@ -96,20 +96,21 @@ async function deleteInventory(id) {
 /**
  * Agrega un dispositivo a un inventario.
  */
-async function addDevice(inventoryId, deviceData, uid) {
+async function addDevice(inventoryId, deviceData, uid, email) {
   const ref = await db
     .collection('inventories').doc(inventoryId)
     .collection('devices').add({
       ...deviceData,
-      createdBy:  uid,
-      createdAt:  firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt:  firebase.firestore.FieldValue.serverTimestamp(),
+      createdBy: uid,
+      createdByEmail: email,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
 
   // Update inventory counter
   await db.collection('inventories').doc(inventoryId).update({
     deviceCount: firebase.firestore.FieldValue.increment(1),
-    updatedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   });
 
   return ref.id;
@@ -152,7 +153,7 @@ async function deleteDevice(inventoryId, deviceId) {
 
   await db.collection('inventories').doc(inventoryId).update({
     deviceCount: firebase.firestore.FieldValue.increment(-1),
-    updatedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   });
 }
 
@@ -173,26 +174,26 @@ async function getDevice(inventoryId, deviceId) {
 async function checkDuplicateSerial(inventoryId, univSerial, devSerial, excludeDeviceId = null) {
   if (!univSerial && !devSerial) return null;
   const devicesRef = db.collection('inventories').doc(inventoryId).collection('devices');
-  
+
   if (univSerial) {
     const snap = await devicesRef.where('universitySerial', '==', univSerial).get();
     const dup = snap.docs.find(d => d.id !== excludeDeviceId);
     if (dup) return { type: 'universitario', data: dup.data() };
   }
-  
+
   if (devSerial) {
     const snap = await devicesRef.where('deviceSerial', '==', devSerial).get();
     const dup = snap.docs.find(d => d.id !== excludeDeviceId);
     if (dup) return { type: 'fabricante', data: dup.data() };
   }
-  
+
   return null;
 }
 
 /**
  * Agrega múltiples dispositivos en lote (Batch).
  */
-async function bulkAddDevices(inventoryId, devices, userId) {
+async function bulkAddDevices(inventoryId, devices, userId, email) {
   const batch = db.batch();
   const invRef = db.collection('inventories').doc(inventoryId);
   const devicesRef = invRef.collection('devices');
@@ -203,6 +204,7 @@ async function bulkAddDevices(inventoryId, devices, userId) {
     batch.set(docRef, {
       ...device,
       createdBy: userId,
+      createdByEmail: email,
       createdAt: now,
       updatedAt: now
     });

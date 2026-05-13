@@ -89,7 +89,7 @@
       text-align: right;
     }
 
-    /* Real-time dot */
+    /* Punto en vivo */
     .live-dot {
       display: inline-flex;
       align-items: center;
@@ -108,7 +108,7 @@
       animation: pulse 2s ease-in-out infinite;
     }
 
-    /* Stats row */
+    /* barra de estatus */
     .stats-bar {
       display: flex;
       gap: 24px;
@@ -137,7 +137,7 @@
       margin-top: 2px;
     }
 
-    /* Search & Filter bar */
+    /* barra de control */
     .controls-bar {
       display: flex;
       gap: 12px;
@@ -170,7 +170,7 @@
 
 <body>
   <div class="app-layout">
-    <!-- Sidebar -->
+    <!-- barra lateral -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
         <div class="sidebar-brand-icon">🖥️</div>
@@ -197,7 +197,7 @@
     </aside>
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-    <!-- Main -->
+    <!-- Contenido principal -->
     <main class="main-content">
       <div class="page-header">
         <div>
@@ -212,7 +212,7 @@
         </div>
       </div>
 
-      <!-- Stats -->
+      <!-- Estatus -->
       <div class="stats-bar" id="stats-bar">
         <div class="stat-item">
           <span class="stat-num gradient-text" id="stat-inv">—</span>
@@ -227,7 +227,7 @@
         </div>
       </div>
 
-      <!-- Controls -->
+      <!-- Controles -->
       <div class="controls-bar">
         <div class="search-bar">
           <span class="search-icon">🔍</span>
@@ -235,9 +235,9 @@
         </div>
       </div>
 
-      <!-- Inventory Grid -->
+      <!-- Inventarios -->
       <div class="inv-grid" id="inv-grid">
-        <!-- Loaded dynamically -->
+        <!-- Se carga dinámicamente -->
       </div>
       <div id="empty-state" style="display:none">
         <div class="empty-state">
@@ -308,7 +308,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-  <!-- bcryptjs for client-side password hashing -->
+  <!-- bcryptjs para hash de contraseñas en el lado del cliente -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/ui.js"></script>
@@ -328,10 +328,10 @@
       loadInventories();
     });
 
-    //  SIDEBAR 
+    // barra lateral
     initSidebar();
 
-    //  LOAD INVENTORIES  
+    // Cargar inventarios  
     function loadInventories() {
       listenInventories(inventories => {
         allInventories = inventories;
@@ -372,7 +372,7 @@
     `).join('');
     }
 
-    //  SEARCH 
+    //  BUSCAR 
     document.getElementById('search-inv').addEventListener('input', e => {
       const q = e.target.value.toLowerCase();
       renderInventories(allInventories.filter(i =>
@@ -380,7 +380,7 @@
       ));
     });
 
-    //  CREATE INVENTORY 
+    //  CREAR INVENTARIO 
     async function handleCreateInventory() {
       const name = document.getElementById('inv-name').value.trim();
       const desc = document.getElementById('inv-desc').value.trim();
@@ -404,7 +404,7 @@
       }
     }
 
-    // SELECT INVENTORY (password check) 
+    // SELECCIONAR INVENTARIO (revisión de contraseña) 
     function selectInventory(id, name) {
       pendingInventoryId = id;
       document.getElementById('pw-entry-inv-name').textContent = name;
@@ -424,7 +424,7 @@
       try {
         const ok = await verifyInventoryPassword(pendingInventoryId, pw);
         if (ok) {
-          // Store session access (sessionStorage only – not persisted)
+          // Almacena el acceso a la sesión (solo sessionStorage – no persistente)
           sessionStorage.setItem(`inv_access_${pendingInventoryId}`, '1');
           closeModal('modal-pw-entry');
           window.location.href = `inventory.html?id=${pendingInventoryId}`;
@@ -441,18 +441,18 @@
       }
     }
 
-    // Enter key on password modal
+    // tecla intro en el modal de contraseña
     document.getElementById('entry-pw')?.addEventListener('keydown', e => {
       if (e.key === 'Enter') handlePasswordEntry();
     });
 
-    //  LOGOUT 
+    //  cerrar sesion 
     async function handleLogout() {
       await auth.signOut();
       window.location.href = 'index.html';
     }
 
-    //  UTILS 
+    //  FUNCIONES DE UTILIDAD 
     function escHtml(str) {
       const d = document.createElement('div');
       d.textContent = str; return d.innerHTML;
