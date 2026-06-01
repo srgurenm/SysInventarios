@@ -16,3 +16,4 @@ desktop.ini
 
 # Netlify cache
 .netlify/
+js/config.js

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Errores — SysInventarios</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/inventory.css">
+  <style>
+    .log-row { background: var(--bg-secondary); margin-bottom: 12px; border-radius: var(--radius-md); padding: 16px; border-left: 4px solid var(--danger); display: flex; flex-direction: column; gap: 8px; }
+    .log-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .log-type { font-weight: bold; color: var(--danger); font-size: 0.9rem; }
+    .log-date { font-size: 0.8rem; color: var(--text-muted); }
+    .log-msg { font-family: monospace; font-size: 0.85rem; background: var(--bg-tertiary); padding: 8px; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; color: #ff8b8b; }
+    .log-meta { font-size: 0.75rem; color: var(--text-secondary); display: flex; gap: 16px; flex-wrap: wrap; margin-top: 4px; }
+    .log-actions { margin-top: 8px; display: flex; justify-content: flex-end; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <div id="sidebar-container"></div>
+    <main class="main-content">
+      <div class="page-header">
+        <div>
+          <button class="hamburger btn btn-ghost btn-icon" id="hamburger">☰</button>
+          <h1 class="page-title">Registro de Errores</h1>
+          <p class="page-subtitle">Auditoría del sistema y captura automática de fallos en producción.</p>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="padding: 20px; background: transparent; border: none; box-shadow: none;">
+        <div id="logs-container">
+          <div style="text-align:center; padding: 40px; color: var(--text-muted);">Cargando logs del sistema...</div>
+        </div>
+      </div>
+      
+      <div id="empty-logs" style="display:none">
+        <div class="empty-state">
+           <div class="empty-state-icon">✅</div>
+           <h3 class="empty-state-title">Sistema Saludable</h3>
+           <p class="empty-state-text">No se han registrado errores en la base de datos recientemente. Todo funciona correctamente.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  
+  <script src="js/config.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    document.getElementById('sidebar-container').innerHTML = renderSidebarHTML('logs');
+  </script>
+  <script src="js/db.js"></script>
+  <script src="js/pages/logs.js"></script>
+</body>
+</html>

@@ -1,103 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="SysInventarios — Sistema de gestión de inventarios de equipos electrónicos universitarios con análisis por IA.">
+  <meta name="description"
+    content="SysInventarios — Sistema de gestión de inventarios de equipos electrónicos universitarios con análisis por IA.">
   <title>SysInventarios — Acceso</title>
   <link rel="stylesheet" href="css/main.css">
-  <style>
-    body { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
-
-    /* Animated background */
-    .bg-orbs { position:fixed; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
-    .orb {
-      position:absolute; border-radius:50%; filter:blur(80px); opacity:0.12;
-      animation: float 8s ease-in-out infinite;
-    }
-    .orb-1 { width:600px;height:600px;background:#6366f1;top:-200px;left:-200px;animation-delay:0s; }
-    .orb-2 { width:400px;height:400px;background:#8b5cf6;bottom:-150px;right:-100px;animation-delay:3s; }
-    .orb-3 { width:300px;height:300px;background:#3b82f6;top:50%;left:60%;animation-delay:5s; }
-    @keyframes float {
-      0%,100%{ transform:translateY(0) scale(1); }
-      50%    { transform:translateY(-30px) scale(1.05); }
-    }
-
-    /* Auth card */
-    .auth-card {
-      position:relative; z-index:1; width:100%; max-width:440px;
-      background:rgba(14,14,26,0.85); border:1px solid var(--border-hover);
-      border-radius:var(--radius-xl); padding:40px;
-      backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
-      box-shadow:var(--shadow-xl), var(--shadow-glow);
-    }
-
-    .auth-logo { text-align:center; margin-bottom:32px; }
-    .auth-logo-icon {
-      width:60px; height:60px; background:var(--gradient);
-      border-radius:var(--radius-lg); display:flex; align-items:center;
-      justify-content:center; font-size:1.75rem; margin:0 auto 16px;
-      box-shadow:var(--shadow-glow-lg);
-    }
-    .auth-logo h1 { font-size:1.75rem; }
-    .auth-logo p  { color:var(--text-secondary); font-size:0.9rem; margin-top:6px; }
-
-    /* Tabs */
-    .tab-bar {
-      display:flex; background:var(--bg-primary); border-radius:var(--radius-md);
-      padding:4px; margin-bottom:28px;
-    }
-    .tab-btn {
-      flex:1; padding:9px; border:none; background:none; cursor:pointer;
-      border-radius:calc(var(--radius-md) - 2px); font-family:var(--font);
-      font-size:0.875rem; font-weight:600; color:var(--text-muted);
-      transition:all 0.2s var(--ease);
-    }
-    .tab-btn.active {
-      background:var(--bg-tertiary); color:var(--text-primary);
-      box-shadow:var(--shadow-sm);
-    }
-
-    .form-panel { display:none; }
-    .form-panel.active { display:flex; flex-direction:column; gap:18px; }
-
-    .forgot-link {
-      font-size:0.8rem; color:var(--indigo-light); text-align:right; cursor:pointer;
-    }
-    .forgot-link:hover { color:var(--text-primary); }
-
-    .auth-divider {
-      display:flex; align-items:center; gap:12px; color:var(--text-muted);
-      font-size:0.8rem; margin:4px 0;
-    }
-    .auth-divider::before,.auth-divider::after {
-      content:''; flex:1; height:1px; background:var(--border);
-    }
-
-    .btn-google {
-      display:flex; align-items:center; justify-content:center; gap:12px;
-      width:100%; padding:12px 20px; border-radius:var(--radius-md);
-      background:#fff; color:#3c4043; border:1px solid #dadce0;
-      font-family:var(--font); font-size:0.9375rem; font-weight:600;
-      cursor:pointer; transition:all 0.2s var(--ease);
-    }
-    .btn-google:hover { background:#f8f8f8; box-shadow:var(--shadow-md); transform:translateY(-1px); }
-    .btn-google svg { flex-shrink:0; }
-
-    .input-group { position:relative; }
-    .input-icon {
-      position:absolute; left:14px; top:50%; transform:translateY(-50%);
-      color:var(--text-muted); font-size:1rem; pointer-events:none;
-    }
-    .input-group .form-input { padding-left:42px; }
-    .pw-toggle {
-      position:absolute; right:14px; top:50%; transform:translateY(-50%);
-      background:none; border:none; cursor:pointer; color:var(--text-muted);
-      font-size:1rem; padding:2px; transition:color 0.2s;
-    }
-    .pw-toggle:hover { color:var(--text-primary); }
-  </style>
+  <link rel="stylesheet" href="css/index.css">
 </head>
+
 <body>
   <div class="bg-orbs">
     <div class="orb orb-1"></div>
@@ -115,10 +28,14 @@
     <!-- Google Sign-In -->
     <button class="btn-google" id="btn-google" onclick="handleGoogleSignIn()">
       <svg width="20" height="20" viewBox="0 0 48 48">
-        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        <path fill="#EA4335"
+          d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+        <path fill="#4285F4"
+          d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+        <path fill="#FBBC05"
+          d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+        <path fill="#34A853"
+          d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
       </svg>
       Continuar con Google
     </button>
@@ -127,8 +44,8 @@
 
     <!-- Tab bar -->
     <div class="tab-bar">
-      <button class="tab-btn active" id="tab-login"   onclick="switchTab('login')">Iniciar Sesión</button>
-      <button class="tab-btn"        id="tab-register" onclick="switchTab('register')">Crear Cuenta</button>
+      <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Iniciar Sesión</button>
+      <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Crear Cuenta</button>
     </div>
 
     <!-- LOGIN -->
@@ -144,7 +61,8 @@
         <label class="form-label required">Contraseña</label>
         <div class="input-group">
           <span class="input-icon">🔒</span>
-          <input type="password" id="login-pw" class="form-input" placeholder="••••••••" autocomplete="current-password">
+          <input type="password" id="login-pw" class="form-input" placeholder="••••••••"
+            autocomplete="current-password">
           <button class="pw-toggle" onclick="togglePw('login-pw',this)" tabindex="-1">👁️</button>
         </div>
         <span class="forgot-link" onclick="handleForgot()">¿Olvidaste tu contraseña?</span>
@@ -174,7 +92,8 @@
         <label class="form-label required">Contraseña</label>
         <div class="input-group">
           <span class="input-icon">🔒</span>
-          <input type="password" id="reg-pw" class="form-input" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+          <input type="password" id="reg-pw" class="form-input" placeholder="Mínimo 6 caracteres"
+            autocomplete="new-password">
           <button class="pw-toggle" onclick="togglePw('reg-pw',this)" tabindex="-1">👁️</button>
         </div>
       </div>
@@ -182,7 +101,8 @@
         <label class="form-label required">Confirmar contraseña</label>
         <div class="input-group">
           <span class="input-icon">🔐</span>
-          <input type="password" id="reg-pw2" class="form-input" placeholder="Repite la contraseña" autocomplete="new-password">
+          <input type="password" id="reg-pw2" class="form-input" placeholder="Repite la contraseña"
+            autocomplete="new-password">
         </div>
       </div>
       <button class="btn btn-primary btn-xl btn-full" id="btn-register" onclick="handleRegister()">
@@ -191,18 +111,19 @@
     </div>
   </div>
 
-  <!-- Firebase SDK (compat) -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="js/config.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/ui.js"></script>
   <script>
     // Redirect if already logged in
     redirectIfLoggedIn('app.html');
 
-    // ── GOOGLE SIGN-IN ────────────────────────────────────
+    // GOOGLE SIGN-IN
     async function handleGoogleSignIn() {
       const btn = document.getElementById('btn-google');
       btn.disabled = true;
@@ -213,8 +134,8 @@
         window.location.href = 'app.html';
       } catch (err) {
         const msgs = {
-          'auth/popup-closed-by-user':    'Ventana de Google cerrada. Intenta de nuevo.',
-          'auth/popup-blocked':           'El navegador bloqueó el popup. Permite ventanas emergentes.',
+          'auth/popup-closed-by-user': 'Ventana de Google cerrada. Intenta de nuevo.',
+          'auth/popup-blocked': 'El navegador bloqueó el popup. Permite ventanas emergentes.',
           'auth/account-exists-with-different-credential': 'Ya existe una cuenta con ese correo.',
         };
         showToast(msgs[err.code] || err.message, 'error');
@@ -224,15 +145,15 @@
       }
     }
 
-    // ── TAB SWITCH ────────────────────────────────────────
+    // TAB SWITCH
     function switchTab(tab) {
-      document.getElementById('panel-login').classList.toggle('active',    tab === 'login');
+      document.getElementById('panel-login').classList.toggle('active', tab === 'login');
       document.getElementById('panel-register').classList.toggle('active', tab === 'register');
-      document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
       document.getElementById('tab-register').classList.toggle('active', tab === 'register');
     }
 
-    // ── TOGGLE PASSWORD ───────────────────────────────────
+    // TOGGLE PASSWORD
     function togglePw(inputId, btn) {
       const input = document.getElementById(inputId);
       const isText = input.type === 'text';
@@ -240,10 +161,10 @@
       btn.textContent = isText ? '👁️' : '🙈';
     }
 
-    // ── LOGIN ─────────────────────────────────────────────
+    // LOGIN
     async function handleLogin() {
       const email = document.getElementById('login-email').value.trim();
-      const pw    = document.getElementById('login-pw').value;
+      const pw = document.getElementById('login-pw').value;
       if (!email || !pw) { showToast('Completa todos los campos.', 'warning'); return; }
 
       const btn = document.getElementById('btn-login');
@@ -253,10 +174,10 @@
         window.location.href = 'app.html';
       } catch (err) {
         const msgs = {
-          'auth/user-not-found':   'No existe cuenta con ese correo.',
-          'auth/wrong-password':   'Contraseña incorrecta.',
-          'auth/invalid-email':    'Correo inválido.',
-          'auth/too-many-requests':'Demasiados intentos. Intenta más tarde.',
+          'auth/user-not-found': 'No existe cuenta con ese correo.',
+          'auth/wrong-password': 'Contraseña incorrecta.',
+          'auth/invalid-email': 'Correo inválido.',
+          'auth/too-many-requests': 'Demasiados intentos. Intenta más tarde.',
         };
         showToast(msgs[err.code] || err.message, 'error');
       } finally {
@@ -264,16 +185,16 @@
       }
     }
 
-    // ── REGISTER ──────────────────────────────────────────
+    // REGISTER
     async function handleRegister() {
-      const name  = document.getElementById('reg-name').value.trim();
+      const name = document.getElementById('reg-name').value.trim();
       const email = document.getElementById('reg-email').value.trim();
-      const pw    = document.getElementById('reg-pw').value;
-      const pw2   = document.getElementById('reg-pw2').value;
+      const pw = document.getElementById('reg-pw').value;
+      const pw2 = document.getElementById('reg-pw2').value;
 
       if (!name || !email || !pw || !pw2) { showToast('Completa todos los campos.', 'warning'); return; }
-      if (pw !== pw2)  { showToast('Las contraseñas no coinciden.', 'warning'); return; }
-      if (pw.length < 6){ showToast('La contraseña debe tener al menos 6 caracteres.', 'warning'); return; }
+      if (pw !== pw2) { showToast('Las contraseñas no coinciden.', 'warning'); return; }
+      if (pw.length < 6) { showToast('La contraseña debe tener al menos 6 caracteres.', 'warning'); return; }
 
       const btn = document.getElementById('btn-register');
       btn.classList.add('loading'); btn.disabled = true;
@@ -284,8 +205,8 @@
       } catch (err) {
         const msgs = {
           'auth/email-already-in-use': 'Ya existe una cuenta con ese correo.',
-          'auth/invalid-email':        'Correo inválido.',
-          'auth/weak-password':        'Contraseña demasiado débil.',
+          'auth/invalid-email': 'Correo inválido.',
+          'auth/weak-password': 'Contraseña demasiado débil.',
         };
         showToast(msgs[err.code] || err.message, 'error');
       } finally {
@@ -293,7 +214,7 @@
       }
     }
 
-    // ── FORGOT ───────────────────────────────────────────
+    // FORGOT PASSWORD
     async function handleForgot() {
       const email = document.getElementById('login-email').value.trim();
       if (!email) { showToast('Escribe tu correo arriba primero.', 'warning'); return; }
@@ -305,7 +226,7 @@
       }
     }
 
-    // ── ENTER KEY ────────────────────────────────────────
+    // ENTER KEY EVENT
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter') return;
       const loginPanel = document.getElementById('panel-login');
@@ -314,4 +235,5 @@
     });
   </script>
 </body>
+
 </html>

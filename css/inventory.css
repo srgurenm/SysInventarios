@@ -1,0 +1,71 @@
+/**
+ * inventory.css — Estilos específicos de inventory.html
+ */
+
+.inv-header-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.type-icon {
+  font-size: 1.125rem;
+}
+
+.status-func {
+  color: var(--success);
+}
+
+.status-nofunc {
+  color: var(--danger);
+}
+
+.status-unknown {
+  color: var(--warning);
+}
+
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.filter-bar .search-wrap {
+  flex: 1;
+  min-width: 180px;
+  position: relative;
+}
+
+.filter-bar .search-wrap .si {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.filter-bar .search-wrap input {
+  padding-left: 36px;
+}
+
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--indigo-light);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}

@@ -1,7 +1,18 @@
 /**
  * gemini.js — Integración con Gemini Vision via Netlify Function
  * Convierte imágenes a base64 y llama al proxy seguro.
+ *
+ * Mejoras v2:
+ * - Timeout de 50 s con AbortController (previene bucles infinitos)
+ * - Detección de solicitud duplicada (cancela la anterior si se llama de nuevo)
+ * - Callbacks de progreso para la UI (onProgress(stage, percent))
+ * - Información del modelo usado retornada en el resultado
  */
+
+const ANALYZE_TIMEOUT_MS = 50_000; // 50 s — margen sobre el timeout del servidor (40 s × 2 modelos)
+
+/** Controlador de la petición en curso. Permite cancelarla si se lanza una nueva. */
+let _activeController = null;
 
 /**
  * Comprime una imagen si es muy grande antes de mandarla a la IA.
@@ -38,15 +49,16 @@ function compressImage(file, maxWidth = 1600, quality = 0.8) {
 }
 
 /**
- * Convierte un File a objeto { mimeType, data (base64) }
- */
+  * Convierte un File a objeto { mimeType, data (base64) }
+  */
 async function fileToBase64(file) {
   // Comprimir primero si es una imagen grande
-  const blob = file.size > 800 * 1024 ? await compressImage(file) : file;
-  
+  const blob = file.size > 500 * 1024 ? await compressImage(file) : file;
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
+      // Limpiar prefijo data:image/jpeg;base64,
       const base64 = reader.result.split(',')[1];
       resolve({ mimeType: 'image/jpeg', data: base64 });
     };
@@ -60,9 +72,10 @@ async function fileToBase64(file) {
  * Retorna los datos extraídos del dispositivo.
  *
  * @param {File[]} files - Entre 1 y 4 imágenes
- * @returns {Promise<object>} Datos extraídos
+ * @param {Function} [onProgress] - Callback(stage: string, percent: number)
+ * @returns {Promise<object>} Datos extraídos + campo _modelUsed
  */
-async function analyzeImagesWithGemini(files, retryCount = 0) {
+async function analyzeImagesWithGemini(files, onProgress) {
   if (!files || files.length === 0) throw new Error('Debes seleccionar al menos una imagen.');
   if (files.length > 4) throw new Error('Máximo 4 imágenes permitidas.');
 
@@ -77,28 +90,65 @@ async function analyzeImagesWithGemini(files, retryCount = 0) {
     }
   }
 
-  const images = await Promise.all(files.map(fileToBase64));
-
-  const response = await fetch('/api/analyze-image', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ images }),
-  });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    
-    // Si es error de cuota (429) y no hemos reintentado mucho, esperar y reintentar
-    if (response.status === 429 && retryCount < 2) {
-      console.log(`Cuota excedida. Reintentando en ${2 * (retryCount + 1)} segundos...`);
-      await new Promise(r => setTimeout(r, 2000 * (retryCount + 1)));
-      return analyzeImagesWithGemini(files, retryCount + 1);
-    }
-
-    throw new Error(err.error || `Error ${response.status} al contactar Gemini.`);
+  // Cancelar análisis anterior si existía (previene bucles)
+  if (_activeController) {
+    console.warn('[gemini.js] Cancelando análisis previo en curso...');
+    _activeController.abort();
   }
 
-  return response.json();
+  _activeController = new AbortController();
+  const signal = _activeController.signal;
+
+  // Timeout global del cliente
+  const timeoutId = setTimeout(() => {
+    if (_activeController) _activeController.abort();
+  }, ANALYZE_TIMEOUT_MS);
+
+  const progress = (stage, percent) => {
+    if (typeof onProgress === 'function') onProgress(stage, percent);
+  };
+
+  try {
+    // Etapa 1: Comprimir y codificar
+    progress('Comprimiendo imágenes...', 15);
+    const images = await Promise.all(files.map(fileToBase64));
+
+    // Etapa 2: Enviar
+    progress('Enviando a la IA...', 40);
+
+    const response = await fetch('/api/analyze-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ images }),
+      signal,
+    });
+
+    // Etapa 3: Recibiendo respuesta
+    progress('Procesando respuesta...', 75);
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `Error ${response.status} al contactar Gemini.`);
+    }
+
+    const data = await response.json();
+
+    // Etapa 4: Listo
+    progress('¡Análisis completado!', 100);
+
+    // Adjuntar el modelo usado (viene en el header de la función serverless)
+    data._modelUsed = response.headers.get('X-Model-Used') || 'gemini';
+
+    return data;
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error('El análisis tardó demasiado y fue cancelado. Inténtalo de nuevo.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+    _activeController = null;
+  }
 }
 
 /**
@@ -107,18 +157,18 @@ async function analyzeImagesWithGemini(files, retryCount = 0) {
  */
 function buildFollowUpQuestions(extracted) {
   const questions = extracted.clarificationQuestions || [];
-  const missing   = extracted.missingFields || [];
+  const missing = extracted.missingFields || [];
 
   const fieldLabels = {
     universitySerial: 'Serial Universitario',
-    deviceSerial:     'Serial del Fabricante',
-    brand:            'Marca',
-    type:             'Tipo de Dispositivo',
-    'specs.processor':'Procesador',
-    'specs.ram':      'Memoria RAM',
-    'specs.storage':  'Almacenamiento',
-    'specs.screen':   'Pantalla',
-    'specs.os':       'Sistema Operativo',
+    deviceSerial: 'Serial del Fabricante',
+    brand: 'Marca',
+    type: 'Tipo de Dispositivo',
+    'specs.processor': 'Procesador',
+    'specs.ram': 'Memoria RAM',
+    'specs.storage': 'Almacenamiento',
+    'specs.screen': 'Pantalla',
+    'specs.os': 'Sistema Operativo',
   };
 
   const extra = missing
@@ -134,17 +184,31 @@ function buildFollowUpQuestions(extracted) {
 async function analyzeBulkExcel(data) {
   if (!data || data.length === 0) throw new Error('No hay datos para procesar.');
 
-  const response = await fetch('/api/analyze-bulk', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ data }),
-  });
+  const BULK_TIMEOUT_MS = 60_000; // 60s
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), BULK_TIMEOUT_MS);
 
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || `Error ${response.status} en análisis masivo.`);
+  try {
+    const response = await fetch('/api/analyze-bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `Error ${response.status} en análisis masivo.`);
+    }
+
+    return await response.json();
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('El análisis masivo tardó demasiado y fue cancelado. Inténtalo de nuevo.');
+    }
+    throw err;
   }
-
-  return response.json();
 }
-

@@ -6,215 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agregar Equipo — SysInventarios</title>
   <link rel="stylesheet" href="css/main.css">
-  <style>
-    /* Upload Zone */
-    .upload-zone {
-      border: 2px dashed var(--border-hover);
-      border-radius: var(--radius-lg);
-      padding: 40px 24px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s var(--ease);
-      background: var(--bg-card);
-      position: relative;
-    }
-
-    .upload-zone:hover,
-    .upload-zone.drag-over {
-      border-color: var(--indigo);
-      background: rgba(99, 102, 241, 0.06);
-      box-shadow: var(--shadow-glow);
-    }
-
-    .upload-zone input[type="file"] {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-      width: 100%;
-      height: 100%;
-    }
-
-    .upload-zone-icon {
-      font-size: 2.5rem;
-      margin-bottom: 12px;
-    }
-
-    .upload-zone h3 {
-      font-size: 1rem;
-      margin-bottom: 6px;
-    }
-
-    .upload-zone p {
-      font-size: 0.825rem;
-      color: var(--text-secondary);
-    }
-
-    /* Image previews */
-    .img-previews {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 16px;
-    }
-
-    .img-thumb {
-      position: relative;
-      width: 100px;
-      height: 100px;
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      border: 2px solid var(--border);
-    }
-
-    .img-thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .img-thumb .remove-btn {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      width: 22px;
-      height: 22px;
-      background: rgba(0, 0, 0, 0.7);
-      border: none;
-      border-radius: 50%;
-      color: #fff;
-      cursor: pointer;
-      font-size: 0.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1;
-    }
-
-    /* AI Panel */
-    .ai-panel {
-      background: rgba(99, 102, 241, 0.08);
-      border: 1px solid rgba(99, 102, 241, 0.25);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      margin-top: 20px;
-    }
-
-    .ai-panel-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .ai-label {
-      font-size: 0.7rem;
-      background: rgba(99, 102, 241, 0.2);
-      color: var(--indigo-light);
-      padding: 2px 10px;
-      border-radius: var(--radius-full);
-    }
-
-    /* Questions banner */
-    .questions-banner {
-      background: var(--warning-bg);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      border-radius: var(--radius-md);
-      padding: 16px 20px;
-    }
-
-    .questions-banner h4 {
-      color: var(--warning);
-      margin-bottom: 10px;
-      font-size: 0.9rem;
-    }
-
-    .questions-banner ul {
-      padding-left: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .questions-banner li {
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-    }
-
-    /* Confidence bar */
-    .conf-bar {
-      height: 6px;
-      background: var(--border);
-      border-radius: var(--radius-full);
-      overflow: hidden;
-    }
-
-    .conf-fill {
-      height: 100%;
-      background: var(--gradient);
-      border-radius: var(--radius-full);
-      transition: width 0.6s var(--ease);
-    }
-
-    .section-title {
-      font-size: 1rem;
-      font-weight: 700;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    /* Duplicate Warning */
-    .dup-warning {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      margin-top: 6px;
-      padding: 8px 12px;
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.2);
-      border-radius: var(--radius-sm);
-      color: #ef4444;
-      font-size: 0.8rem;
-    }
-
-    .form-input.is-invalid {
-      border-color: #ef4444;
-      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
-    }
-  </style>
+  <link rel="stylesheet" href="css/add-device.css">
 </head>
 
 <body>
   <div class="app-layout">
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-brand">
-        <div class="sidebar-brand-icon">🖥️</div>
-        <div>
-          <div class="sidebar-brand-name">SysInventarios</div>
-          <div class="sidebar-brand-sub">Panel de Control</div>
-        </div>
-      </div>
-      <nav class="sidebar-nav">
-        <div class="sidebar-section-title">Navegación</div>
-        <a href="app.html" class="sidebar-link"><span class="icon">📦</span> Mis Inventarios</a>
-        <a href="#" id="link-back-inv" class="sidebar-link"><span class="icon">📋</span> Inventario</a>
-        <div class="sidebar-section-title" style="margin-top:16px">Cuenta</div>
-        <button class="sidebar-link" onclick="handleLogout()"><span class="icon">🚪</span> Cerrar Sesión</button>
-      </nav>
-      <div class="sidebar-footer">
-        <div class="user-info">
-          <div class="user-avatar" id="user-avatar">?</div>
-          <div>
-            <div class="user-name" id="user-name">Cargando...</div>
-            <div class="user-email" id="user-email"></div>
-          </div>
-        </div>
-      </div>
-    </aside>
-    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <!-- Sidebar centralizado inyectado vía JS -->
+    <div id="sidebar-container"></div>
 
     <!-- Main -->
     <main class="main-content">
@@ -243,10 +41,41 @@
 
         <div style="margin-top:20px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
           <button class="btn btn-primary btn-lg" id="btn-analyze" onclick="handleAnalyze()" disabled>
-            Analizar con IA
+            ✨ Analizar con IA
           </button>
           <button class="btn btn-ghost btn-sm" onclick="clearImages()">🗑️ Limpiar imágenes</button>
           <span id="img-count-label" class="text-muted text-sm"></span>
+        </div>
+
+        <!-- Barra de progreso de análisis IA -->
+        <div class="ai-progress-wrapper" id="ai-progress-wrapper">
+          <div class="ai-progress-header">
+            <span class="ai-progress-stage" id="ai-progress-stage">Iniciando análisis...</span>
+            <span class="ai-progress-percent" id="ai-progress-percent">0%</span>
+          </div>
+          <div class="ai-progress-bar-track">
+            <div class="ai-progress-bar-fill" id="ai-progress-fill"></div>
+          </div>
+          <p class="ai-progress-hint" id="ai-progress-hint">Esto puede tomar entre 10 y 40 segundos según la cantidad de imágenes.</p>
+        </div>
+
+        <!-- Banner de error con botón de reintentar -->
+        <div class="ai-error-banner" id="ai-error-banner">
+          <div class="ai-error-banner-header">
+            <span class="ai-error-icon">⚠️</span>
+            <div class="ai-error-text">
+              <div class="ai-error-title">El análisis no pudo completarse</div>
+              <div class="ai-error-message" id="ai-error-message">Error desconocido.</div>
+            </div>
+          </div>
+          <div class="ai-error-actions">
+            <button class="btn-retry" id="btn-retry" onclick="handleAnalyze()">
+              🔄 Reintentar
+            </button>
+            <button class="btn-dismiss-error" onclick="hideAnalysisError()">
+              ✕ Descartar
+            </button>
+          </div>
         </div>
       </div>
 
@@ -313,19 +142,7 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label required" for="f-type">Tipo de Dispositivo <span id="lbl-type"></span></label>
-              <select id="f-type" class="form-select">
-                <option value="">— Selecciona —</option>
-                <option>Computador de Escritorio</option>
-                <option>Portátil/Laptop</option>
-                <option>Pantalla/Monitor</option>
-                <option>All-in-One</option>
-                <option>Tablet</option>
-                <option>Impresora</option>
-                <option>Servidor</option>
-                <option>Switch/Router</option>
-                <option>Proyector</option>
-                <option>Otro</option>
-              </select>
+              <select id="f-type" class="form-select" onchange="updateSpecVisibility(this.value, 'f-')"></select>
             </div>
           </div>
 
@@ -409,285 +226,19 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+  <script src="js/config.js"></script>
   <script src="js/firebase-config.js"></script>
+  <script src="js/constants.js"></script>
   <script src="js/ui.js"></script>
-  <script src="js/db.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/gemini.js"></script>
   <script>
-    const params = new URLSearchParams(location.search);
-    const INV_ID = params.get('inv');
-    const EDIT_ID = params.get('edit');
-    if (!INV_ID) location.href = 'app.html';
-
-    let currentUser = null;
-    let selectedFiles = [];
-    let aiExtracted = false;
-
-    // INIT 
-    requireAuth().then(user => {
-      currentUser = user;
-      document.getElementById('user-name').textContent = user.displayName || 'Usuario';
-      document.getElementById('user-email').textContent = user.email;
-      document.getElementById('user-avatar').textContent =
-        (user.displayName || user.email).charAt(0).toUpperCase();
-
-      if (!sessionStorage.getItem(`inv_access_${INV_ID}`)) {
-        showToast('Acceso denegado.', 'warning');
-        setTimeout(() => location.href = 'app.html', 1200);
-        return;
-      }
-
-      const backUrl = `inventory.html?id=${INV_ID}`;
-      document.getElementById('back-link').href = backUrl;
-      document.getElementById('cancel-link').href = backUrl;
-      document.getElementById('link-back-inv').href = backUrl;
-
-      if (EDIT_ID) {
-        document.getElementById('page-title').textContent = 'Editar Equipo';
-        loadEditDevice();
-      }
-    });
-
-    initSidebar();
-
-    // Cargar datos del dispositivo
-    async function loadEditDevice() {
-      try {
-        const d = await getDevice(INV_ID, EDIT_ID);
-        fillForm(d, false);
-      } catch (e) { showToast('Error cargando dispositivo: ' + e.message, 'error'); }
-    }
-
-    // Subir imágenes
-    const fileInput = document.getElementById('file-input');
-    const uploadZone = document.getElementById('upload-zone');
-
-    fileInput.addEventListener('change', e => handleFiles(e.target.files));
-
-    // arrastra
-    uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
-    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
-    uploadZone.addEventListener('drop', e => {
-      e.preventDefault(); uploadZone.classList.remove('drag-over');
-      handleFiles(e.dataTransfer.files);
-    });
-
-    function handleFiles(files) {
-      const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-      const valid = [...files].filter(f => allowed.includes(f.type));
-      const combined = [...selectedFiles, ...valid].slice(0, 4);
-      selectedFiles = combined;
-      renderPreviews();
-    }
-
-    function renderPreviews() {
-      const container = document.getElementById('img-previews');
-      container.innerHTML = selectedFiles.map((f, i) => {
-        const url = URL.createObjectURL(f);
-        return `<div class="img-thumb">
-        <img src="${url}" alt="Imagen ${i + 1}">
-        <button class="remove-btn" onclick="removeImage(${i})">✕</button>
-      </div>`;
-      }).join('');
-
-      const n = selectedFiles.length;
-      document.getElementById('img-count-label').textContent = n > 0 ? `${n}/4 imagen(es) seleccionada(s)` : '';
-      document.getElementById('btn-analyze').disabled = n === 0;
-    }
-
-    function removeImage(i) {
-      selectedFiles.splice(i, 1);
-      renderPreviews();
-    }
-
-    function clearImages() {
-      selectedFiles = [];
-      fileInput.value = '';
-      renderPreviews();
-      document.getElementById('ai-panel').style.display = 'none';
-      document.getElementById('questions-banner').style.display = 'none';
-    }
-
-    // Analizar con Gemini 
-    async function handleAnalyze() {
-      if (selectedFiles.length === 0) { showToast('Selecciona al menos una imagen.', 'warning'); return; }
-      const btn = document.getElementById('btn-analyze');
-      btn.classList.add('loading'); btn.disabled = true;
-      showLoading('Analizando imágenes con Gemini AI...');
-
-      try {
-        const result = await analyzeImagesWithGemini(selectedFiles);
-        hideLoading();
-        fillForm(result, true);
-        showAIPanel(result);
-        showQuestions(result);
-        aiExtracted = true;
-        showToast('¡Análisis completado! Verifica los datos extraídos.', 'success');
-      } catch (e) {
-        hideLoading();
-        showToast('Error en análisis: ' + e.message, 'error');
-      } finally {
-        btn.classList.remove('loading'); btn.disabled = false;
-      }
-    }
-
-    function fillForm(data, fromAI) {
-      const ai = fromAI ? '✨' : '';
-      const setVal = (id, val, lblId) => {
-        if (val) {
-          document.getElementById(id).value = val;
-          if (fromAI) document.getElementById(id).classList.add('ai-filled');
-          if (lblId) document.getElementById(lblId).textContent = fromAI && val ? ai : '';
-        }
-      };
-
-      setVal('f-univ-serial', data.universitySerial, 'lbl-univ-serial');
-      setVal('f-dev-serial', data.deviceSerial, 'lbl-dev-serial');
-      setVal('f-brand', data.brand, 'lbl-brand');
-      setVal('f-model', data.model, 'lbl-model');
-
-      if (data.type) {
-        const sel = document.getElementById('f-type');
-        for (const opt of sel.options) {
-          if (opt.value === data.type) { sel.value = data.type; break; }
-        }
-        if (fromAI) document.getElementById('lbl-type').textContent = ai;
-      }
-
-      if (data.specs) {
-        setVal('f-proc', data.specs.processor, 'lbl-proc');
-        setVal('f-ram', data.specs.ram, 'lbl-ram');
-        setVal('f-storage', data.specs.storage, 'lbl-stor');
-        setVal('f-screen', data.specs.screen, 'lbl-scr');
-        setVal('f-os', data.specs.os, 'lbl-os');
-        setVal('f-other', data.specs.other, 'lbl-other');
-      }
-
-      if (data.notes) setVal('f-notes', data.notes, 'lbl-notes');
-
-      if (data.status) {
-        const statusMap = { 'Funcional': 's-func', 'No Funcional': 's-nofunc', 'Desconocido': 's-unknown' };
-        const radioId = statusMap[data.status];
-        if (radioId) document.getElementById(radioId).checked = true;
-      }
-    }
-
-    function showAIPanel(result) {
-      const panel = document.getElementById('ai-panel');
-      const conf = result.confidence || 0;
-      document.getElementById('conf-fill').style.width = conf + '%';
-      document.getElementById('ai-confidence-label').textContent = `Confianza: ${conf}%`;
-      panel.style.display = '';
-      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    function showQuestions(result) {
-      const questions = buildFollowUpQuestions(result);
-      const banner = document.getElementById('questions-banner');
-      const list = document.getElementById('questions-list');
-      if (questions.length === 0) { banner.style.display = 'none'; return; }
-      list.innerHTML = questions.map(q => `<li>${escHtml(q)}</li>`).join('');
-      banner.style.display = '';
-    }
-
-    // Guardar dispositivo
-    async function handleSave() {
-      const univSerial = document.getElementById('f-univ-serial').value.trim();
-      const devSerial = document.getElementById('f-dev-serial').value.trim();
-      const brand = document.getElementById('f-brand').value.trim();
-      const model = document.getElementById('f-model').value.trim();
-      const type = document.getElementById('f-type').value;
-      const status = document.querySelector('input[name="status"]:checked')?.value || 'Desconocido';
-      const notes = document.getElementById('f-notes').value.trim();
-
-      if (!univSerial || !devSerial || !brand || !type) {
-        showToast('Completa los campos obligatorios (Serial Univ., Serial Disp., Marca, Tipo).', 'warning');
-        return;
-      }
-
-      const deviceData = {
-        universitySerial: univSerial,
-        deviceSerial: devSerial,
-        brand, model, type, status, notes,
-        specs: {
-          processor: document.getElementById('f-proc').value.trim() || null,
-          ram: document.getElementById('f-ram').value.trim() || null,
-          storage: document.getElementById('f-storage').value.trim() || null,
-          screen: document.getElementById('f-screen').value.trim() || null,
-          os: document.getElementById('f-os').value.trim() || null,
-          other: document.getElementById('f-other').value.trim() || null,
-        },
-        extractedByAI: aiExtracted
-      };
-
-      const btn = document.getElementById('btn-save');
-      btn.classList.add('loading'); btn.disabled = true;
-      showLoading(EDIT_ID ? 'Actualizando equipo...' : 'Guardando equipo...');
-
-      try {
-        // Verificación final de duplicados antes de guardar
-        const dup = await checkDuplicateSerial(INV_ID, univSerial, devSerial, EDIT_ID);
-        if (dup) {
-          hideLoading();
-          showToast(`Error: El serial ${dup.type} ya existe.`, 'error');
-          btn.classList.remove('loading'); btn.disabled = false;
-          return;
-        }
-
-        let deviceId = EDIT_ID;
-        if (EDIT_ID) {
-          await updateDevice(INV_ID, EDIT_ID, deviceData);
-        } else {
-          deviceId = await addDevice(INV_ID, deviceData, currentUser.uid, currentUser.email);
-        }
-
-        hideLoading();
-        showToast(EDIT_ID ? 'Equipo actualizado.' : 'Equipo agregado al inventario.', 'success');
-        setTimeout(() => { location.href = `inventory.html?id=${INV_ID}`; }, 1000);
-      } catch (e) {
-        hideLoading();
-        showToast('Error al guardar: ' + e.message, 'error');
-        btn.classList.remove('loading'); btn.disabled = false;
-      }
-    }
-
-    // Detección de duplicados
-    let dupTimeout = null;
-    async function handleSerialInput() {
-      clearTimeout(dupTimeout);
-      dupTimeout = setTimeout(async () => {
-        const univ = document.getElementById('f-univ-serial').value.trim();
-        const dev = document.getElementById('f-dev-serial').value.trim();
-
-        const dup = await checkDuplicateSerial(INV_ID, univ, dev, EDIT_ID);
-
-        const univMsg = document.getElementById('dup-univ-msg');
-        const devMsg = document.getElementById('dup-dev-msg');
-        const univInp = document.getElementById('f-univ-serial');
-        const devInp = document.getElementById('f-dev-serial');
-
-        univMsg.style.display = (dup && dup.type === 'universitario') ? 'flex' : 'none';
-        devMsg.style.display = (dup && dup.type === 'fabricante') ? 'flex' : 'none';
-
-        univInp.classList.toggle('is-invalid', dup && dup.type === 'universitario');
-        devInp.classList.toggle('is-invalid', dup && dup.type === 'fabricante');
-      }, 500);
-    }
-
-    // Atajos de teclado
-    document.addEventListener('keydown', e => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        handleSave();
-      }
-    });
-
-    async function handleLogout() { await auth.signOut(); location.href = 'index.html'; }
-    function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    // Inyectar el menú lateral
+    document.getElementById('sidebar-container').innerHTML = renderSidebarHTML('add-device');
   </script>
+  <script src="js/db.js"></script>
+  <script src="js/gemini.js"></script>
+  <script src="js/pages/add-device.js"></script>
 </body>
+</html>
 
 </html>

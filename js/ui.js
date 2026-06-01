@@ -1,6 +1,6 @@
 /**
  * ui.js — Utilidades de interfaz de usuario
- * Toast notifications, modals, loading states
+ * Toast notifications, modals, loading states, shared helpers
  */
 
 // TOAST
@@ -168,3 +168,148 @@ function redirectIfLoggedIn(redirectTo = 'app.html') {
     if (user) window.location.href = redirectTo;
   });
 }
+
+/**
+ * Populates the sidebar user profile elements with the authenticated user's data.
+ * Centralizes repeated user-profile injection logic (DRY).
+ * @param {firebase.User} user - The currently authenticated Firebase user.
+ */
+function setupUserProfile(user) {
+  const nameEl   = document.getElementById('user-name');
+  const emailEl  = document.getElementById('user-email');
+  const avatarEl = document.getElementById('user-avatar');
+  if (nameEl)   nameEl.textContent   = user.displayName || 'Usuario';
+  if (emailEl)  emailEl.textContent  = user.email;
+  if (avatarEl) avatarEl.textContent = (user.displayName || user.email).charAt(0).toUpperCase();
+}
+
+// SHARED HELPERS
+
+/**
+ * Escapa caracteres HTML para evitar XSS al insertar texto en el DOM.
+ * @param {string} s - Cadena a escapar.
+ * @returns {string}
+ */
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s ?? '';
+  return d.innerHTML;
+}
+
+/**
+ * Cierra la sesión de Firebase y redirige al login.
+ */
+async function handleLogout() {
+  await auth.signOut();
+  window.location.href = 'index.html';
+}
+
+/**
+ * Copia texto al portapapeles y muestra un toast de confirmación.
+ * @param {string} text - Texto a copiar.
+ */
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Copiado al portapapeles', 'success', 2000);
+  }).catch(() => {
+    showToast('No se pudo copiar', 'error', 2000);
+  });
+}
+
+// =========================================================================
+// RENDER COMPONENTES COMUNES (DRY)
+// =========================================================================
+
+/**
+ * Retorna el HTML de la barra lateral (Sidebar) para inyectarlo en el DOM.
+ * @param {string} activeLink - 'app', 'inventory', o 'add-device'
+ */
+function renderSidebarHTML(activeLink = 'app') {
+  return `
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">🖥️</div>
+        <div>
+          <div class="sidebar-brand-name">SysInventarios</div>
+          <div class="sidebar-brand-sub">Panel de Control</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-title">Navegación</div>
+        <a href="app.html" class="sidebar-link ${activeLink === 'app' ? 'active' : ''}">
+          <span class="icon">📦</span> Mis Inventarios
+        </a>
+        
+        ${(activeLink === 'inventory' || activeLink === 'add-device') ? `
+          <a href="#" class="sidebar-link ${activeLink === 'inventory' ? 'active' : ''}" id="sidebar-inv-name">
+            <span class="icon">📋</span> Inventario
+          </a>
+        ` : ''}
+
+        <a href="logs.html" class="sidebar-link ${activeLink === 'logs' ? 'active' : ''}">
+          <span class="icon">⚙️</span> Registro de Errores
+        </a>
+        
+        <div class="sidebar-section-title" style="margin-top:16px">Cuenta</div>
+        <button class="sidebar-link" onclick="handleLogout()"><span class="icon">🚪</span> Cerrar Sesión</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="user-avatar">?</div>
+          <div>
+            <div class="user-name" id="user-name">Cargando...</div>
+            <div class="user-email" id="user-email"></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  `;
+}
+
+// =========================================================================
+// MANEJO DE ERRORES GLOBALES (Error Boundary)
+// =========================================================================
+
+window.addEventListener('error', (event) => {
+  // Ignoramos errores de extensiones externas que puedan inyectar scripts
+  if (event.filename && !event.filename.includes(window.location.hostname) && window.location.hostname !== '') {
+    return;
+  }
+  
+  const errorMessage = event.error?.message || event.message || 'Error Desconocido';
+  console.error("Global JS Error Capturado:", errorMessage);
+  showToast("Error inesperado en la interfaz. Recarga la página si el problema persiste.", 'error', 5000);
+
+  // Registrar en DB (si la función existe)
+  if (typeof logSystemError === 'function') {
+    logSystemError({
+      type: 'Client Error',
+      message: errorMessage,
+      filename: event.filename || 'Desconocido',
+      lineno: event.lineno || null,
+      colno: event.colno || null,
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+      userEmail: (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser.email : 'Anónimo'
+    });
+  }
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  const msg = event.reason?.message || event.reason || "Error de red o comunicación.";
+  console.error("Promesa rechazada globalmente:", msg);
+  showToast(`Error en la operación: ${msg}`, 'error', 5000);
+
+  // Registrar en DB (si la función existe)
+  if (typeof logSystemError === 'function') {
+    logSystemError({
+      type: 'Unhandled Promise Rejection',
+      message: String(msg),
+      stack: event.reason?.stack || null,
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+      userEmail: (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser.email : 'Anónimo'
+    });
+  }
+});

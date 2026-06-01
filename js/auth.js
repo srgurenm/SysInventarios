@@ -3,23 +3,43 @@
  */
 
 async function loginUser(email, password) {
-  return auth.signInWithEmailAndPassword(email, password);
+  try {
+    return await auth.signInWithEmailAndPassword(email, password);
+  } catch (error) {
+    console.error('Error al iniciar sesión:', error);
+    throw error;
+  }
 }
 
 async function registerUser(email, password, displayName) {
-  const { user } = await auth.createUserWithEmailAndPassword(email, password);
-  await user.updateProfile({ displayName });
-  return user;
+  try {
+    const { user } = await auth.createUserWithEmailAndPassword(email, password);
+    await user.updateProfile({ displayName });
+    return user;
+  } catch (error) {
+    console.error('Error al registrar usuario:', error);
+    throw error;
+  }
 }
 
 async function logoutUser() {
-  return auth.signOut();
+  try {
+    return await auth.signOut();
+  } catch (error) {
+    console.error('Error al cerrar sesión:', error);
+    throw error;
+  }
 }
 
 async function sendPasswordReset(email) {
-  return auth.sendPasswordResetEmail(email);
+  try {
+    return await auth.sendPasswordResetEmail(email);
+  } catch (error) {
+    console.error('Error al enviar restablecimiento de contraseña:', error);
+    throw error;
+  }
 }
 
 function getCurrentUser() {
-  return auth.currentUser;
+  return auth ? auth.currentUser : null;
 }
