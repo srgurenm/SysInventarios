@@ -11,3 +11,7 @@
 - ⚡ **Tiempo real**: cambios visibles al instante en todos los usuarios conectados (Firestore `onSnapshot`)
 - 🖥️ **Gestión completa**: Serial universitario, serial del dispositivo, marca, tipo, especificaciones técnicas, estado (Funcional / No Funcional), notas
 - 📱 **Responsive**: funciona en móvil y escritorio
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
