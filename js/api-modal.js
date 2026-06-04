@@ -1,27 +1,3 @@
-/* CSS para el modal de API Key */
-const style = document.createElement('style');
-style.textContent = `
-  #api-key-modal {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;
-    z-index: 9999;
-  }
-  .modal-content {
-    background: #1a1a2e; color: #fff; padding: 25px; border-radius: 12px;
-    max-width: 500px; width: 90%; font-family: sans-serif;
-  }
-  .modal-content a { color: #4e8cf9; }
-  .modal-content input {
-    width: 100%; padding: 10px; margin: 15px 0; border-radius: 5px; border: 1px solid #444;
-    background: #16213e; color: white;
-  }
-  .modal-btn {
-    padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer;
-    background: #6c63ff; color: white;
-  }
-`;
-document.head.appendChild(style);
-
 function showApiKeyModal() {
   return new Promise((resolve) => {
     const modal = document.createElement('div');
