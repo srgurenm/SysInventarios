@@ -162,21 +162,25 @@
 
     showAnalysisProgress();
 
-    try {
-      const result = await analyzeImagesWithGemini(selectedFiles, (stage, percent) => {
-        updateProgress(stage, percent);
-      });
+      try {
+        const result = await analyzeImagesWithGemini(selectedFiles, (stage, percent) => {
+          updateProgress(stage, percent);
+        });
 
-      fillForm(result, true);
-      showAIPanel(result);
-      showQuestions(result);
-      aiExtracted = true;
+        fillForm(result, true);
+        showAIPanel(result);
+        showQuestions(result);
+        aiExtracted = true;
+        
+        // Asignar el valor de confianza si no viene de la IA
+        if (result.confidence === undefined) result.confidence = 100;
+        
+        const modelLabel = result._modelUsed && result._modelUsed !== 'gemini-2.5-flash'
+          ? ` (via ${result._modelUsed})`
+          : '';
+        showToast(`¡Análisis completado${modelLabel}! Verifica los datos extraídos.`, 'success');
+        hideAnalysisProgress();
 
-      const modelLabel = result._modelUsed && result._modelUsed !== 'gemini-2.5-flash'
-        ? ` (via ${result._modelUsed})`
-        : '';
-      showToast(`¡Análisis completado${modelLabel}! Verifica los datos extraídos.`, 'success');
-      hideAnalysisProgress();
 
     } catch (e) {
       showAnalysisError(e.message);
