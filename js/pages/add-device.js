@@ -248,20 +248,22 @@
     banner.style.display = '';
   }
 
-  // Guardar dispositivo
-  window.handleSave = async function () {
-    const univSerial = document.getElementById('f-univ-serial').value.trim();
-    const devSerial = document.getElementById('f-dev-serial').value.trim();
-    const brand = document.getElementById('f-brand').value.trim();
-    const model = document.getElementById('f-model').value.trim();
-    const type = document.getElementById('f-type').value;
-    const status = document.querySelector('input[name="status"]:checked')?.value || 'Desconocido';
-    const notes = document.getElementById('f-notes').value.trim();
+    // Guardar dispositivo
+    window.handleSave = async function () {
+      const univSerial = document.getElementById('f-univ-serial').value.trim();
+      const devSerial = document.getElementById('f-dev-serial').value.trim();
+      const brand = document.getElementById('f-brand').value.trim();
+      const model = document.getElementById('f-model').value.trim();
+      const type = document.getElementById('f-type').value;
+      const status = document.querySelector('input[name="status"]:checked')?.value || 'Desconocido';
+      const notes = document.getElementById('f-notes').value.trim();
 
-    if (!univSerial || !devSerial || !brand || !type) {
-      showToast('Completa los campos obligatorios (Serial Univ., Serial Disp., Marca, Tipo).', 'warning');
-      return;
-    }
+      // Validación corregida: Ahora solo valida campos reales de la interfaz
+      if (!univSerial || !brand || !type) {
+        showToast('Completa los campos obligatorios (Serial Univ., Marca, Tipo).', 'warning');
+        return;
+      }
+
 
     const getVisibleVal = (id) => {
       const el = document.getElementById(id);
