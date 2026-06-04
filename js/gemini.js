@@ -121,7 +121,7 @@ async function analyzeImagesWithGemini(files, onProgress) {
     const body = {
       contents: [{
         parts: [
-          { text: "Analiza la etiqueta en la imagen con precisión. \n1. PRIORIDAD ALTA: Busca y extrae el 'Serial Universitario' (números de inventario). \n2. PRIORIDAD ALTA: Busca y extrae el 'Serial del Fabricante' (busca etiquetas como 'Serial No.', 'S/N', 'Serial Number', 'Service Tag' o similares). \n3. Extrae también: tipoEquipo, notas y caracteristicas técnicas. \nSi no encuentras un valor específico, usa 'No detectado'. \nResponde EXCLUSIVAMENTE en formato JSON plano (sin formato markdown): {\"tipoEquipo\":\"...\",\"serialUniv\":\"...\",\"serialFab\":\"...\",\"notas\":\"...\",\"caracteristicas\":\"...\"}." },
+          { text: "Analiza estos equipos electrónicos y extrae los datos en formato JSON. Devuelve SOLO el JSON." },
           ...images.map(img => ({
             inline_data: { mime_type: img.mimeType, data: img.data }
           }))
