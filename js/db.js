@@ -19,7 +19,9 @@ const getLogRef = (logId) => getLogsRef().doc(logId);
  * Valida los datos del dispositivo antes de guardar.
  */
 function validateDeviceData(data) {
-  // Eliminamos la validación estricta de 'name' ya que no es un campo obligatorio en el formulario
+  if (!data.universitySerial || !data.universitySerial.trim()) throw new Error('Serial Universitario es requerido.');
+  if (!data.brand || !data.brand.trim()) throw new Error('Marca es requerida.');
+  if (!data.type || !data.type.trim()) throw new Error('Tipo de dispositivo es requerido.');
   return true;
 }
 
@@ -120,14 +122,21 @@ async function updateInventory(id, data) {
 
 /**
  * Elimina un inventario y todos sus dispositivos.
- * Usa batched writes para consistencia.
+ * Usa batched writes para consistencia y soporta más de 500 dispositivos.
  */
 async function deleteInventory(id) {
   const devicesSnap = await getDevicesRef(id).get();
-  const batch = db.batch();
-  devicesSnap.docs.forEach(d => batch.delete(d.ref));
-  batch.delete(getInventoryRef(id));
-  await batch.commit();
+  
+  // Dividir en bloques de 499
+  const docs = devicesSnap.docs;
+  for (let i = 0; i < docs.length; i += 499) {
+    const chunk = docs.slice(i, i + 499);
+    const batch = db.batch();
+    chunk.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  }
+  
+  await getInventoryRef(id).delete();
 }
 
 // DEVICES
@@ -243,23 +252,35 @@ async function checkDuplicateSerial(inventoryId, univSerial, devSerial, excludeD
 async function bulkAddDevices(inventoryId, devices, userId, email) {
   devices.forEach(validateDeviceData);
 
-  const batch = db.batch();
   const invRef = getInventoryRef(inventoryId);
   const devicesRef = getDevicesRef(inventoryId);
   const now = firebase.firestore.FieldValue.serverTimestamp();
 
-  devices.forEach(device => {
-    const docRef = devicesRef.doc();
-    batch.set(docRef, {
-      ...device,
-      createdBy: userId,
-      createdByEmail: email,
-      createdAt: now,
-      updatedAt: now
+  // Dividir en bloques de 499 (máximo de batch de firestore)
+  for (let i = 0; i < devices.length; i += 499) {
+    const chunk = devices.slice(i, i + 499);
+    const batch = db.batch();
+    
+    chunk.forEach(device => {
+      const docRef = devicesRef.doc();
+      batch.set(docRef, {
+        ...device,
+        createdBy: userId,
+        createdByEmail: email,
+        createdAt: now,
+        updatedAt: now
+      });
     });
-  });
-
-  await batch.commit();
+    
+    // Actualizar contador del inventario
+    batch.update(invRef, {
+        deviceCount: firebase.firestore.FieldValue.increment(chunk.length),
+        updatedAt: now
+    });
+    
+    await batch.commit();
+  }
+  
   await logUserAction('bulk_add_devices', { count: devices.length, inventoryId }, userId, email);
 }
 
