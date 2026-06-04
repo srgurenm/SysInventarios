@@ -4,6 +4,7 @@
  * 1. NO subas 'config.js' al control de versiones (git).
  * 2. Añade 'config.js' a tu archivo .gitignore.
  */
+window.GEMINI_API_KEY = "AIzaSyCMbwvTjRoe7WyLXpKevgFKjgTVNRVT4QA";
 window.FIREBASE_CONFIG = {
   apiKey:            "AIzaSyA93OGMhXmfSkIdnx3Eai8yFbuJiW0bKkc",
   authDomain:        "sysinventarios-beaa1.firebaseapp.com",

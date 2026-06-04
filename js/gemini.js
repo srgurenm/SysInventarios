@@ -116,10 +116,23 @@ async function analyzeImagesWithGemini(files, onProgress) {
     // Etapa 2: Enviar
     progress('Enviando a la IA...', 40);
 
-    const response = await fetch('/api/analyze-image', {
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${window.GEMINI_API_KEY}`;
+    
+    const body = {
+      contents: [{
+        parts: [
+          { text: "Analiza estos equipos electrónicos y extrae los datos en formato JSON. Devuelve SOLO el JSON." },
+          ...images.map(img => ({
+            inline_data: { mime_type: img.mimeType, data: img.data }
+          }))
+        ]
+      }]
+    };
+
+    const response = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ images }),
+      body: JSON.stringify(body),
       signal,
     });
 
@@ -128,16 +141,21 @@ async function analyzeImagesWithGemini(files, onProgress) {
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || `Error ${response.status} al contactar Gemini.`);
+      throw new Error(err.error?.message || `Error ${response.status} al contactar Gemini.`);
     }
 
-    const data = await response.json();
+    const result = await response.json();
+    const responseText = result.candidates[0].content.parts[0].text;
+    
+    // Limpiar el JSON de respuesta (Gemini a veces añade bloques ```json)
+    const jsonStr = responseText.replace(/```json|```/g, "").trim();
+    const data = JSON.parse(jsonStr);
 
     // Etapa 4: Listo
     progress('¡Análisis completado!', 100);
 
-    // Adjuntar el modelo usado (viene en el header de la función serverless)
-    data._modelUsed = response.headers.get('X-Model-Used') || 'gemini';
+    // Adjuntar el modelo usado
+    data._modelUsed = 'gemini-1.5-flash';
 
     return data;
   } catch (err) {
@@ -189,10 +207,21 @@ async function analyzeBulkExcel(data) {
   const timeoutId = setTimeout(() => controller.abort(), BULK_TIMEOUT_MS);
 
   try {
-    const response = await fetch('/api/analyze-bulk', {
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${window.GEMINI_API_KEY}`;
+    
+    const body = {
+      contents: [{
+        parts: [
+          { text: "Analiza estos datos masivos y mapealos al esquema JSON requerido. Devuelve SOLO el JSON." },
+          { text: JSON.stringify(data) }
+        ]
+      }]
+    };
+
+    const response = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     });
 
@@ -200,10 +229,14 @@ async function analyzeBulkExcel(data) {
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || `Error ${response.status} en análisis masivo.`);
+      throw new Error(err.error?.message || `Error ${response.status} en análisis masivo.`);
     }
 
-    return await response.json();
+    const result = await response.json();
+    const responseText = result.candidates[0].content.parts[0].text;
+    const jsonStr = responseText.replace(/```json|```/g, "").trim();
+    
+    return JSON.parse(jsonStr);
   } catch (err) {
     clearTimeout(timeoutId);
     if (err.name === 'AbortError') {
