@@ -119,7 +119,13 @@ async function analyzeImagesWithGemini(files, onProgress) {
 function getApiKey() {
   let key = localStorage.getItem('gemini_api_key');
   if (!key) {
-    key = prompt("Para usar la IA, ingresa tu API Key de Google Gemini:");
+    const instructions = 
+      "Para continuar, necesitas una API Key de Google Gemini:\n\n" +
+      "1. Ve a: https://aistudio.google.com/app/apikey\n" +
+      "2. Haz clic en 'Create API key'.\n" +
+      "3. Copia la clave generada y pégala aquí.";
+      
+    key = prompt(instructions);
     if (key) {
       localStorage.setItem('gemini_api_key', key.trim());
       return key.trim();
