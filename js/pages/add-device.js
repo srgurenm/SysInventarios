@@ -34,6 +34,9 @@
     if (EDIT_ID) {
       document.getElementById('page-title').textContent = 'Editar Equipo';
       loadEditDevice();
+    } else {
+      // Inicializar visibilidad en limpio
+      updateSpecVisibility('', 'f-');
     }
   });
 
