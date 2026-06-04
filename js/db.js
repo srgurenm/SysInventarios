@@ -19,8 +19,7 @@ const getLogRef = (logId) => getLogsRef().doc(logId);
  * Valida los datos del dispositivo antes de guardar.
  */
 function validateDeviceData(data) {
-  if (!data.name || !data.name.trim()) throw new Error('El nombre es requerido.');
-  // Agrega más validaciones aquí según sea necesario
+  // Eliminamos la validación estricta de 'name' ya que no es un campo obligatorio en el formulario
   return true;
 }
 
