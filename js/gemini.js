@@ -13,6 +13,8 @@
 
 /** Modelo de Gemini a usar en todas las llamadas */
 const GEMINI_MODEL = 'gemini-3.1-flash-lite';
+const GEMINI_PROMPT_ANALYZE = "Analiza la etiqueta en la imagen con precisión. Extrae los datos y responde EXCLUSIVAMENTE en formato JSON plano (sin formato markdown) con la siguiente estructura: {\"universitySerial\":\"...\",\"deviceSerial\":\"...\",\"brand\":\"...\",\"model\":\"...\",\"type\":\"...\",\"specs\":{\"processor\":\"...\",\"ram\":\"...\",\"storage\":\"...\",\"screen\":\"...\",\"os\":\"...\",\"other\":\"...\"},\"notes\":\"...\",\"status\":\"Funcional\"}. Si no encuentras un valor, usa 'No detectado'.";
+const GEMINI_PROMPT_BULK = "Analiza estos datos de inventario y mapéalos al siguiente esquema JSON. Devuelve SOLO un array JSON (sin markdown) donde cada elemento tenga esta estructura: {\"universitySerial\":\"...\",\"deviceSerial\":\"...\",\"brand\":\"...\",\"model\":\"...\",\"type\":\"...\",\"status\":\"Funcional\",\"notes\":\"...\",\"specs\":{\"processor\":\"...\",\"ram\":\"...\",\"storage\":\"...\",\"screen\":\"...\",\"os\":\"...\",\"other\":\"...\"}}. Los tipos válidos son: Computador de Escritorio, Portátil/Laptop, Pantalla/Monitor, All-in-One, Tablet, Impresora, Servidor, Switch/Router, Proyector, Otro. Los estados válidos son: Funcional, No Funcional, Desconocido. Si un campo no tiene datos, usa cadena vacía \"\".";
 
 const ANALYZE_TIMEOUT_MS = 50_000; // 50 s
 const BULK_TIMEOUT_MS = 60_000;    // 60 s
@@ -27,11 +29,10 @@ let _activeController = null;
 function compressImage(file, maxWidth = 1600, quality = 0.8) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error(`No se pudo leer el archivo: ${file.name}`));
-    reader.readAsDataURL(file);
+    reader.onerror = () => reject(new Error('Error leyendo archivo'));
     reader.onload = (e) => {
       const img = new Image();
-      img.onerror = () => reject(new Error(`No se pudo cargar la imagen: ${file.name}`));
+      img.onerror = () => reject(new Error('Error cargando imagen'));
       img.src = e.target.result;
       img.onload = () => {
         try {
@@ -43,6 +44,25 @@ function compressImage(file, maxWidth = 1600, quality = 0.8) {
             height = (maxWidth / width) * height;
             width = maxWidth;
           }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob((blob) => {
+            if (!blob) reject(new Error('Error al comprimir'));
+            else resolve(blob);
+          }, 'image/jpeg', quality);
+        } catch (err) {
+          reject(new Error(`Error al comprimir imagen: ${err.message}`));
+        }
+      };
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 
           canvas.width = width;
           canvas.height = height;
@@ -168,7 +188,7 @@ async function analyzeImagesWithGemini(files, onProgress) {
     const body = {
       contents: [{
         parts: [
-          { text: "Analiza la etiqueta en la imagen con precisión. Extrae los datos y responde EXCLUSIVAMENTE en formato JSON plano (sin formato markdown) con la siguiente estructura: {\"universitySerial\":\"...\",\"deviceSerial\":\"...\",\"brand\":\"...\",\"model\":\"...\",\"type\":\"...\",\"specs\":{\"processor\":\"...\",\"ram\":\"...\",\"storage\":\"...\",\"screen\":\"...\",\"os\":\"...\",\"other\":\"...\"},\"notes\":\"...\",\"status\":\"Funcional\"}. Si no encuentras un valor, usa 'No detectado'." },
+          { text: GEMINI_PROMPT_ANALYZE },
           ...images.map(img => ({
             inline_data: { mime_type: img.mimeType, data: img.data }
           }))
@@ -209,6 +229,8 @@ async function analyzeImagesWithGemini(files, onProgress) {
 
     // Adjuntar el modelo usado
     data._modelUsed = GEMINI_MODEL;
+    // Asumir 100% de confianza si el análisis fue exitoso
+    data.confidence = 100;
 
     return data;
   } catch (err) {
@@ -267,7 +289,7 @@ async function analyzeBulkExcel(data) {
     const body = {
       contents: [{
         parts: [
-          { text: `Analiza estos datos de inventario y mapéalos al siguiente esquema JSON. Devuelve SOLO un array JSON (sin markdown) donde cada elemento tenga esta estructura: {"universitySerial":"...","deviceSerial":"...","brand":"...","model":"...","type":"...","status":"Funcional","notes":"...","specs":{"processor":"...","ram":"...","storage":"...","screen":"...","os":"...","other":"..."}}. Los tipos válidos son: Computador de Escritorio, Portátil/Laptop, Pantalla/Monitor, All-in-One, Tablet, Impresora, Servidor, Switch/Router, Proyector, Otro. Los estados válidos son: Funcional, No Funcional, Desconocido. Si un campo no tiene datos, usa cadena vacía "".` },
+          { text: GEMINI_PROMPT_BULK },
           { text: JSON.stringify(data) }
         ]
       }]
