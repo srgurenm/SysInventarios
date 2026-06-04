@@ -113,35 +113,14 @@ async function analyzeImagesWithGemini(files, onProgress) {
     progress('Comprimiendo imágenes...', 15);
     const images = await Promise.all(files.map(fileToBase64));
 
-    /**
- * Obtiene la API Key desde localStorage o la solicita al usuario.
- */
-function getApiKey() {
-  let key = localStorage.getItem('gemini_api_key');
-  if (!key) {
-    const instructions = 
-      "Para continuar, necesitas una API Key de Google Gemini:\n\n" +
-      "1. Ve a: https://aistudio.google.com/app/apikey\n" +
-      "2. Haz clic en 'Create API key'.\n" +
-      "3. Copia la clave generada y pégala aquí.";
-      
-    key = prompt(instructions);
-    if (key) {
-      localStorage.setItem('gemini_api_key', key.trim());
-      return key.trim();
-    }
-    return null;
-  }
-  return key;
-}
-
-// ... (dentro de analyzeImagesWithGemini)
-// Etapa 2: Enviar
+    // Etapa 2: Enviar
     progress('Enviando a la IA...', 40);
 
-    const key = getApiKey();
+    const key = await getApiKey(); // Usamos la función del nuevo script
     if (!key) throw new Error("API Key de Gemini necesaria para continuar.");
+    
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${key}`;
+
     
     const body = {
       contents: [{
