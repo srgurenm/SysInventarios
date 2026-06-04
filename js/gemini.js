@@ -1,15 +1,21 @@
 /**
- * gemini.js — Integración con Gemini Vision via Netlify Function
- * Convierte imágenes a base64 y llama al proxy seguro.
+ * gemini.js — Integración con Gemini Vision via API directa
+ * Convierte imágenes a base64 y llama a la API de Gemini.
  *
- * Mejoras v2:
+ * Mejoras v3:
  * - Timeout de 50 s con AbortController (previene bucles infinitos)
  * - Detección de solicitud duplicada (cancela la anterior si se llama de nuevo)
  * - Callbacks de progreso para la UI (onProgress(stage, percent))
- * - Información del modelo usado retornada en el resultado
+ * - Modelo centralizado en constante
+ * - Manejo robusto de errores en compressImage y respuestas de la API
+ * - Uso consistente de getApiKey() en todas las funciones
  */
 
-const ANALYZE_TIMEOUT_MS = 50_000; // 50 s — margen sobre el timeout del servidor (40 s × 2 modelos)
+/** Modelo de Gemini a usar en todas las llamadas */
+const GEMINI_MODEL = 'gemini-3.1-flash-lite';
+
+const ANALYZE_TIMEOUT_MS = 50_000; // 50 s
+const BULK_TIMEOUT_MS = 60_000;    // 60 s
 
 /** Controlador de la petición en curso. Permite cancelarla si se lanza una nueva. */
 let _activeController = null;
@@ -19,30 +25,40 @@ let _activeController = null;
  * Esto evita errores de "Payload Too Large" (500/413).
  */
 function compressImage(file, maxWidth = 1600, quality = 0.8) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
+    reader.onerror = () => reject(new Error(`No se pudo leer el archivo: ${file.name}`));
     reader.readAsDataURL(file);
     reader.onload = (e) => {
       const img = new Image();
+      img.onerror = () => reject(new Error(`No se pudo cargar la imagen: ${file.name}`));
       img.src = e.target.result;
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
+        try {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
 
-        if (width > maxWidth) {
-          height = (maxWidth / width) * height;
-          width = maxWidth;
+          if (width > maxWidth) {
+            height = (maxWidth / width) * height;
+            width = maxWidth;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error(`No se pudo comprimir la imagen: ${file.name}`));
+              return;
+            }
+            resolve(blob);
+          }, 'image/jpeg', quality);
+        } catch (err) {
+          reject(new Error(`Error al comprimir imagen: ${err.message}`));
         }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        canvas.toBlob((blob) => {
-          resolve(blob);
-        }, 'image/jpeg', quality);
       };
     };
   });
@@ -62,9 +78,36 @@ async function fileToBase64(file) {
       const base64 = reader.result.split(',')[1];
       resolve({ mimeType: 'image/jpeg', data: base64 });
     };
-    reader.onerror = reject;
+    reader.onerror = () => reject(new Error(`No se pudo codificar la imagen: ${file.name}`));
     reader.readAsDataURL(blob);
   });
+}
+
+/**
+ * Valida la estructura de respuesta de Gemini antes de intentar parsear.
+ * @param {object} result - La respuesta JSON de la API
+ * @returns {string} El texto de respuesta
+ * @throws {Error} Si la respuesta no tiene la estructura esperada
+ */
+function extractGeminiResponseText(result) {
+  if (!result) {
+    throw new Error('La API no devolvió ninguna respuesta.');
+  }
+  if (!result.candidates || result.candidates.length === 0) {
+    const blockReason = result.promptFeedback?.blockReason;
+    if (blockReason) {
+      throw new Error(`La API bloqueó la solicitud: ${blockReason}. Intenta con otras imágenes.`);
+    }
+    throw new Error('La API devolvió una respuesta vacía. Intenta de nuevo.');
+  }
+  const candidate = result.candidates[0];
+  if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+    throw new Error(`La API terminó con razón: ${candidate.finishReason}. Intenta de nuevo.`);
+  }
+  if (!candidate.content?.parts?.[0]?.text) {
+    throw new Error('La respuesta de la API no contiene texto. Intenta de nuevo.');
+  }
+  return candidate.content.parts[0].text;
 }
 
 /**
@@ -116,10 +159,10 @@ async function analyzeImagesWithGemini(files, onProgress) {
     // Etapa 2: Enviar
     progress('Enviando a la IA...', 40);
 
-    const key = await getApiKey(); // Usamos la función del nuevo script
+    const key = await getApiKey();
     if (!key) throw new Error("API Key de Gemini necesaria para continuar.");
     
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${key}`;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
 
     
     const body = {
@@ -149,17 +192,23 @@ async function analyzeImagesWithGemini(files, onProgress) {
     }
 
     const result = await response.json();
-    const responseText = result.candidates[0].content.parts[0].text;
+    const responseText = extractGeminiResponseText(result);
     
     // Limpiar el JSON de respuesta (Gemini a veces añade bloques ```json)
     const jsonStr = responseText.replace(/```json|```/g, "").trim();
-    const data = JSON.parse(jsonStr);
+    
+    let data;
+    try {
+      data = JSON.parse(jsonStr);
+    } catch (parseErr) {
+      throw new Error('La IA devolvió una respuesta que no es JSON válido. Intenta de nuevo.');
+    }
 
     // Etapa 4: Listo
     progress('¡Análisis completado!', 100);
 
     // Adjuntar el modelo usado
-    data._modelUsed = 'gemini-3.1-flash-lite';
+    data._modelUsed = GEMINI_MODEL;
 
     return data;
   } catch (err) {
@@ -206,17 +255,19 @@ function buildFollowUpQuestions(extracted) {
 async function analyzeBulkExcel(data) {
   if (!data || data.length === 0) throw new Error('No hay datos para procesar.');
 
-  const BULK_TIMEOUT_MS = 60_000; // 60s
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), BULK_TIMEOUT_MS);
 
   try {
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${window.GEMINI_API_KEY}`;
+    const key = await getApiKey();
+    if (!key) throw new Error("API Key de Gemini necesaria para continuar.");
+
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
     
     const body = {
       contents: [{
         parts: [
-          { text: "Analiza estos datos masivos y mapealos al esquema JSON requerido. Devuelve SOLO el JSON." },
+          { text: `Analiza estos datos de inventario y mapéalos al siguiente esquema JSON. Devuelve SOLO un array JSON (sin markdown) donde cada elemento tenga esta estructura: {"universitySerial":"...","deviceSerial":"...","brand":"...","model":"...","type":"...","status":"Funcional","notes":"...","specs":{"processor":"...","ram":"...","storage":"...","screen":"...","os":"...","other":"..."}}. Los tipos válidos son: Computador de Escritorio, Portátil/Laptop, Pantalla/Monitor, All-in-One, Tablet, Impresora, Servidor, Switch/Router, Proyector, Otro. Los estados válidos son: Funcional, No Funcional, Desconocido. Si un campo no tiene datos, usa cadena vacía "".` },
           { text: JSON.stringify(data) }
         ]
       }]
@@ -229,23 +280,29 @@ async function analyzeBulkExcel(data) {
       signal: controller.signal,
     });
 
-    clearTimeout(timeoutId);
-
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       throw new Error(err.error?.message || `Error ${response.status} en análisis masivo.`);
     }
 
     const result = await response.json();
-    const responseText = result.candidates[0].content.parts[0].text;
+    const responseText = extractGeminiResponseText(result);
     const jsonStr = responseText.replace(/```json|```/g, "").trim();
     
-    return JSON.parse(jsonStr);
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch (parseErr) {
+      throw new Error('La IA devolvió una respuesta que no es JSON válido. Intenta de nuevo.');
+    }
+
+    return parsed;
   } catch (err) {
-    clearTimeout(timeoutId);
     if (err.name === 'AbortError') {
       throw new Error('El análisis masivo tardó demasiado y fue cancelado. Inténtalo de nuevo.');
     }
     throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
