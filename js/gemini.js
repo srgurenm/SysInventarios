@@ -116,7 +116,7 @@ async function analyzeImagesWithGemini(files, onProgress) {
     // Etapa 2: Enviar
     progress('Enviando a la IA...', 40);
 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${window.GEMINI_API_KEY}`;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${window.GEMINI_API_KEY}`;
     
     const body = {
       contents: [{
@@ -155,7 +155,7 @@ async function analyzeImagesWithGemini(files, onProgress) {
     progress('¡Análisis completado!', 100);
 
     // Adjuntar el modelo usado
-    data._modelUsed = 'gemini-3.1-flash-lite';
+    data._modelUsed = 'gemini-2.0-flash';
 
     return data;
   } catch (err) {
