@@ -49,8 +49,7 @@ function compressImage(file, maxWidth = 1600, quality = 0.8) {
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
-
-           canvas.toBlob((blob) => {
+          canvas.toBlob((blob) => {
             if (!blob) reject(new Error('Error al comprimir'));
             else resolve(blob);
           }, 'image/jpeg', quality);
@@ -60,33 +59,6 @@ function compressImage(file, maxWidth = 1600, quality = 0.8) {
       };
     };
     reader.readAsDataURL(file);
-  });
-}
-
-      };
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-
-          canvas.toBlob((blob) => {
-            if (!blob) {
-              reject(new Error(`No se pudo comprimir la imagen: ${file.name}`));
-              return;
-            }
-            resolve(blob);
-          }, 'image/jpeg', quality);
-        } catch (err) {
-          reject(new Error(`Error al comprimir imagen: ${err.message}`));
-        }
-      };
-    };
   });
 }
 
