@@ -298,7 +298,9 @@ async function logSystemError(errorData) {
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
   } catch (e) {
-    console.error("Fallo al guardar log en DB:", e);
+    if (e.code !== 'permission-denied') {
+      console.error("Fallo al guardar log en DB:", e);
+    }
   }
 }
 

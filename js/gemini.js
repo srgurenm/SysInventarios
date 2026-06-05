@@ -50,13 +50,19 @@ function compressImage(file, maxWidth = 1600, quality = 0.8) {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          canvas.toBlob((blob) => {
+           canvas.toBlob((blob) => {
             if (!blob) reject(new Error('Error al comprimir'));
             else resolve(blob);
           }, 'image/jpeg', quality);
         } catch (err) {
           reject(new Error(`Error al comprimir imagen: ${err.message}`));
         }
+      };
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
       };
     };
     reader.readAsDataURL(file);

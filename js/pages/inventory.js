@@ -475,6 +475,7 @@
     } catch (err) {
       hideLoading();
       showToast('Error al guardar: ' + err.message, 'error');
+    } finally {
       btn.classList.remove('loading'); btn.disabled = false;
     }
   };
