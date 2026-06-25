@@ -1,8 +1,4 @@
-/**
- * constants.js — Constantes globales de la aplicación
- * Fuente única de verdad para tipos de dispositivo e iconos.
- * Cargado antes de ui.js en todas las páginas autenticadas.
- */
+
 
 /** Tipos de dispositivo disponibles en el sistema */
 const DEVICE_TYPES = [
