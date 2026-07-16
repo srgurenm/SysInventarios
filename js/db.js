@@ -365,8 +365,22 @@ function listenSystemLogs(callback) {
 }
 
 /**
- * Elimina (resuelve) un log del sistema.
+ * Recalcula los contadores de un inventario basado en sus dispositivos.
  */
-async function deleteSystemLog(logId) {
-  await getLogRef(logId).delete();
+async function recalculateStats(inventoryId) {
+  const devicesSnap = await getDevicesRef(inventoryId).get();
+  let deviceCount = 0;
+  let funcCount = 0;
+  
+  devicesSnap.docs.forEach(doc => {
+    const data = doc.data();
+    deviceCount++;
+    if (data.status === 'Funcional') funcCount++;
+  });
+  
+  await getInventoryRef(inventoryId).update({
+    deviceCount,
+    funcCount,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
 }

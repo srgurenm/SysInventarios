@@ -30,6 +30,10 @@
     
     // Contenedor de estadísticas
     let html = `
+      <div class="stats-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+        <h3>Métricas Globales</h3>
+        <button class="btn btn-secondary btn-sm" onclick="syncAllStats()">🔄 Sincronizar Estadísticas</button>
+      </div>
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-value">${totalInventories}</div>
@@ -62,27 +66,22 @@
       </div>
     `;
     
-    // Si el contenedor ya tiene el grid, no lo reiniciamos completamente, 
-    // pero para simplicidad, reiniciamos todo el contenido.
-    if (!container.querySelector('.logs-section')) {
-        container.innerHTML = html;
-    } else {
-        // Solo actualizar valores
-        document.querySelector('.stats-grid').innerHTML = `
-        <div class="stat-card">
-          <div class="stat-value">${totalInventories}</div>
-          <div class="stat-label">Inventarios Totales</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">${totalDevices}</div>
-          <div class="stat-label">Equipos Totales</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">${functionalDevices}</div>
-          <div class="stat-label">Equipos Funcionales</div>
-        </div>
-        `;
-    }
+    container.innerHTML = html;
+    
+    // Make global for button onclick
+    window.allInventoriesForSync = inventories;
+  }
+
+  window.syncAllStats = async function() {
+      showLoading("Sincronizando estadísticas...");
+      try {
+          await Promise.all(allInventoriesForSync.map(inv => recalculateStats(inv.id)));
+          showToast("Estadísticas sincronizadas exitosamente", "success");
+      } catch (e) {
+          showToast("Error al sincronizar: " + e.message, "error");
+      } finally {
+          hideLoading();
+      }
   }
 
   function renderLogs(logs) {
