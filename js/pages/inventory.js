@@ -103,8 +103,8 @@
     empty.style.display = 'none';
     tbody.innerHTML = devices.map(d => `
       <tr data-id="${escHtml(d.id)}" style="cursor:pointer" title="Click para ver detalles">
-        <td colspan="8">
-          <div class="cyber-container">
+        <td colspan="8" style="padding:0;">
+          <div class="cyber-container" style="margin: 5px auto;">
             <div class="canvas">
               <div class="tracker tr-1"></div><div class="tracker tr-2"></div><div class="tracker tr-3"></div><div class="tracker tr-4"></div><div class="tracker tr-5"></div>
               <div class="tracker tr-6"></div><div class="tracker tr-7"></div><div class="tracker tr-8"></div><div class="tracker tr-9"></div><div class="tracker tr-10"></div>
