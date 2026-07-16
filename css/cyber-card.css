@@ -1,81 +1,56 @@
-
 /* =============================================
-   CYBER CARD COMPONENT
+   CARD COMPONENT (Uiverse/SelfMadeSystem)
    ============================================= */
-.cyber-container {
+
+/* Main container for the grid items */
+.card-container {
   position: relative;
-  width: 240px;
-  height: 320px;
-  perspective: 1000px;
-  transition: 200ms;
+  width: 100%;
+  max-width: 320px;
+  height: 200px;
+  border-radius: 1em;
   margin: 10px;
+  /* Ensure it behaves well in the table layout */
+  display: inline-block;
+  vertical-align: top;
 }
 
-.canvas {
+.card-border {
   position: absolute;
   inset: 0;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(5, 1fr);
-  z-index: 10;
-}
-
-.tracker {
-  position: relative;
-  z-index: 20;
+  background: #0005;
+  border-radius: inherit;
 }
 
 .card {
   position: absolute;
-  inset: 0;
-  z-index: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: var(--radius-lg);
-  transition: 700ms;
-  background: linear-gradient(45deg, #1a1a1a, #262626);
-  border: 1px solid var(--border);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-  transform-style: preserve-3d;
-  width: 100%;
-  height: 100%;
-}
-
-/* Hover effects */
-.tracker:hover ~ .card {
-  transition: 300ms;
-  border-color: var(--indigo-light);
-  box-shadow: var(--shadow-glow);
-}
-
-
-.card-content {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  padding: 20px;
+  inset: 0.125em;
+  border-radius: 0.875em;
+  background: #111215;
   display: flex;
   flex-direction: column;
+  color: #fff;
+  overflow: hidden;
+  padding: 15px;
   justify-content: center;
-  align-items: center;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   text-align: center;
 }
 
 .title {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 800;
-  letter-spacing: 2px;
-  background: var(--gradient-text);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 5px rgba(241, 99, 99, 0.3));
+  color: #fff;
 }
 
 .subtitle {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  font-size: 0.85rem;
+  color: #a0a0a0;
 }
 
 .highlight {
@@ -83,47 +58,46 @@
   font-weight: bold;
 }
 
-/* Hover effects */
-.tracker:hover ~ #card {
-  transition: 300ms;
-  border-color: var(--indigo-light);
-  box-shadow: var(--shadow-glow);
+/* Background effects */
+.backdrop {
+  position: absolute;
+  inset: -100%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    #0000 0,
+    #0000 20%,
+    #111111aa 50%
+  );
+  background-size: 3px 3px;
+  z-index: -1;
+  border-radius: inherit;
 }
 
-/* Trackers setup - mapping to grid */
-.tr-1 { grid-area: 1 / 1 / 2 / 2; }
-.tr-2 { grid-area: 1 / 2 / 2 / 3; }
-.tr-3 { grid-area: 1 / 3 / 2 / 4; }
-.tr-4 { grid-area: 1 / 4 / 2 / 5; }
-.tr-5 { grid-area: 1 / 5 / 2 / 6; }
-.tr-6 { grid-area: 2 / 1 / 3 / 2; }
-.tr-7 { grid-area: 2 / 2 / 3 / 3; }
-.tr-8 { grid-area: 2 / 3 / 3 / 4; }
-.tr-9 { grid-area: 2 / 4 / 3 / 5; }
-.tr-10 { grid-area: 2 / 5 / 3 / 6; }
-.tr-11 { grid-area: 3 / 1 / 4 / 2; }
-.tr-12 { grid-area: 3 / 2 / 4 / 3; }
-.tr-13 { grid-area: 3 / 3 / 4 / 4; }
-.tr-14 { grid-area: 3 / 4 / 4 / 5; }
-.tr-15 { grid-area: 3 / 5 / 4 / 6; }
-.tr-16 { grid-area: 4 / 1 / 5 / 2; }
-.tr-17 { grid-area: 4 / 2 / 5 / 3; }
-.tr-18 { grid-area: 4 / 3 / 5 / 4; }
-.tr-19 { grid-area: 4 / 4 / 5 / 5; }
-.tr-20 { grid-area: 4 / 5 / 5 / 6; }
-.tr-21 { grid-area: 5 / 1 / 6 / 2; }
-.tr-22 { grid-area: 5 / 2 / 6 / 3; }
-.tr-23 { grid-area: 5 / 3 / 6 / 4; }
-.tr-24 { grid-area: 5 / 4 / 6 / 5; }
-.tr-25 { grid-area: 5 / 5 / 6 / 6; }
+.spin {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  border-radius: inherit;
+}
 
-/* Rotation Logic */
-.tr-1:hover ~ .card { transform: rotateX(10deg) rotateY(-10deg); }
-.tr-3:hover ~ .card { transform: rotateX(10deg) rotateY(0deg); }
-.tr-5:hover ~ .card { transform: rotateX(10deg) rotateY(10deg); }
-.tr-11:hover ~ .card { transform: rotateX(0deg) rotateY(-10deg); }
-.tr-13:hover ~ .card { transform: rotateX(0deg) rotateY(0deg); }
-.tr-15:hover ~ .card { transform: rotateX(0deg) rotateY(10deg); }
-.tr-21:hover ~ .card { transform: rotateX(-10deg) rotateY(-10deg); }
-.tr-23:hover ~ .card { transform: rotateX(-10deg) rotateY(0deg); }
-.tr-25:hover ~ .card { transform: rotateX(-10deg) rotateY(10deg); }
+.spin::before {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  animation: speen 8s cubic-bezier(0.56, 0.15, 0.28, 0.86) infinite;
+}
+
+.spin-blur {
+  filter: blur(3em);
+}
+
+.spin-blur::before {
+  background: linear-gradient(-45deg, #f50, #0000 46% 54%, #05f);
+}
+
+@keyframes speen {
+  0% { rotate: 10deg; }
+  50% { rotate: 190deg; }
+  to { rotate: 370deg; }
+}
