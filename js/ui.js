@@ -236,6 +236,9 @@ function renderSidebarHTML(activeLink = 'app') {
       </div>
       <nav class="sidebar-nav">
         <div class="sidebar-section-title">Navegación</div>
+        <a href="dashboard.html" class="sidebar-link ${activeLink === 'dashboard' ? 'active' : ''}">
+          <span class="icon">📊</span> Dashboard General
+        </a>
         <a href="app.html" class="sidebar-link ${activeLink === 'app' ? 'active' : ''}">
           <span class="icon">📦</span> Mis Inventarios
         </a>

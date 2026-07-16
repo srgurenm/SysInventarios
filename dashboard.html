@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard General — SysInventarios</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <div class="app-layout">
+    <div id="sidebar-container"></div>
+    <main class="main-content">
+      <div class="page-header">
+        <div>
+          <button class="hamburger btn btn-ghost btn-icon" id="hamburger">☰</button>
+          <h1 class="page-title">Dashboard General</h1>
+          <p class="page-subtitle">Visión global de todos tus inventarios</p>
+        </div>
+      </div>
+      <div id="dashboard-content">
+        <p>Cargando métricas globales...</p>
+      </div>
+    </main>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    document.getElementById('sidebar-container').innerHTML = renderSidebarHTML('dashboard');
+  </script>
+  <script src="js/db.js"></script>
+  <script src="js/pages/dashboard.js"></script>
+</body>
+</html>
