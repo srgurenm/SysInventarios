@@ -43,17 +43,22 @@
     }
     empty.style.display = 'none';
     grid.innerHTML = list.map((inv, i) => `
-      <div class="inv-card fade-in" onclick="selectInventory('${inv.id}','${escHtml(inv.name)}')"
-           style="animation-delay:${i * 0.05}s">
-        <div class="inv-icon">${ICONS[i % ICONS.length]}</div>
-        <div class="inv-name">${escHtml(inv.name)}</div>
-        <div class="inv-desc">${escHtml(inv.description || 'Sin descripción')}</div>
-        <div class="inv-meta">
-          <div>
-            <div class="inv-count">${inv.deviceCount || 0}</div>
-            <div class="inv-count-label">Equipos</div>
+      <div class="card-container fade-in" style="animation-delay:${i * 0.05}s; cursor:pointer;"
+           onclick="selectInventory('${inv.id}','${escHtml(inv.name)}')">
+        <div class="spin spin-blur"></div>
+        <div class="backdrop"></div>
+        <div class="card-border"></div>
+        <div class="card">
+          <div class="card-content">
+            <div class="title">${escHtml(inv.name)}</div>
+            <div class="subtitle" style="margin-top:10px;">
+              <span>${escHtml(inv.description || 'Sin descripción')}</span><br>
+              <span class="highlight">${inv.deviceCount || 0} Equipos</span>
+            </div>
+            <div class="subtitle" style="margin-top:10px; font-size:0.7rem;">
+               Actualizado: ${timeAgo(inv.updatedAt)}
+            </div>
           </div>
-          <div class="inv-date">Actualizado<br>${timeAgo(inv.updatedAt)}</div>
         </div>
       </div>
     `).join('');
