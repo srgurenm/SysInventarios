@@ -158,14 +158,62 @@ async function addDevice(inventoryId, deviceData, uid, email) {
   // Log action
   await logUserAction('add_device', { deviceId: ref.id, inventoryId }, uid, email);
 
-  // Update inventory counter
-  await getInventoryRef(inventoryId).update({
+  // Update inventory counters
+  const invUpdate = {
     deviceCount: firebase.firestore.FieldValue.increment(1),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-  });
+  };
+  if (deviceData.status === 'Funcional') {
+    invUpdate.funcCount = firebase.firestore.FieldValue.increment(1);
+  }
+  await getInventoryRef(inventoryId).update(invUpdate);
 
   return ref.id;
 }
+
+/**
+ * Actualiza un dispositivo.
+ */
+async function updateDevice(inventoryId, deviceId, data) {
+  const oldDevice = await getDevice(inventoryId, deviceId);
+  await getDeviceRef(inventoryId, deviceId).update({
+    ...data,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+
+  // Update inventory counters if status changed
+  if (oldDevice.status !== data.status) {
+    const invUpdate = { updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+    if (oldDevice.status === 'Funcional' && data.status !== 'Funcional') {
+      invUpdate.funcCount = firebase.firestore.FieldValue.increment(-1);
+    } else if (oldDevice.status !== 'Funcional' && data.status === 'Funcional') {
+      invUpdate.funcCount = firebase.firestore.FieldValue.increment(1);
+    }
+    await getInventoryRef(inventoryId).update(invUpdate);
+  } else {
+    await getInventoryRef(inventoryId).update({
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  }
+}
+
+/**
+ * Elimina un dispositivo.
+ */
+async function deleteDevice(inventoryId, deviceId) {
+  const device = await getDevice(inventoryId, deviceId);
+  await getDeviceRef(inventoryId, deviceId).delete();
+
+  const invUpdate = {
+    deviceCount: firebase.firestore.FieldValue.increment(-1),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  if (device.status === 'Funcional') {
+    invUpdate.funcCount = firebase.firestore.FieldValue.increment(-1);
+  }
+  await getInventoryRef(inventoryId).update(invUpdate);
+}
+
 
 /**
  * Escucha cambios en tiempo real de los dispositivos de un inventario.
