@@ -17,6 +17,7 @@ body {
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
+  box-shadow: var(--shadow-sm), var(--shadow-glow);
 }
 
 .orb {
@@ -25,11 +26,12 @@ body {
   filter: blur(80px);
   opacity: 0.12;
   animation: float 8s ease-in-out infinite;
+  box-shadow: var(--shadow-sm), var(--shadow-glow);
 }
 
-.orb-1 { width: 600px; height: 600px; background: #6366f1; top: -200px;  left: -200px; animation-delay: 0s; }
-.orb-2 { width: 400px; height: 400px; background: #8b5cf6; bottom: -150px; right: -100px; animation-delay: 3s; }
-.orb-3 { width: 300px; height: 300px; background: #3b82f6; top: 50%;    left: 60%;   animation-delay: 5s; }
+.orb-1 { width: 600px; height: 600px; background: #f163aa; top: -200px;  left: -200px; animation-delay: 0s; }
+.orb-2 { width: 400px; height: 400px; background: #db4747; bottom: -150px; right: -100px; animation-delay: 3s; }
+.orb-3 { width: 300px; height: 300px; background: #d13bf6; top: 50%;    left: 60%;   animation-delay: 5s; }
 
 @keyframes float {
   0%, 100% { transform: translateY(0) scale(1); }
@@ -49,6 +51,7 @@ body {
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   box-shadow: var(--shadow-xl), var(--shadow-glow);
+  
 }
 
 .auth-logo {

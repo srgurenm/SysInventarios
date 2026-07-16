@@ -316,7 +316,7 @@
   }
 }
 
-/* ─── AI Analysis Error / Retry Banner ─────────────────────────────────── */
+/*Banner re intentar analisis*/
 .ai-error-banner {
   display: none;
   gap: 14px;

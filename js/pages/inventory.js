@@ -102,34 +102,21 @@
     }
     empty.style.display = 'none';
     tbody.innerHTML = devices.map(d => `
-      <tr data-id="${escHtml(d.id)}" style="cursor:pointer" title="Click para ver detalles">
-        <td><span class="type-icon">${TYPE_ICONS[d.type] || '📦'}</span> <span class="text-sm">${escHtml(d.type || '—')}</span></td>
-        <td>
-          <strong>${escHtml(d.brand || '—')}</strong>
-          <div class="text-xs text-muted">${escHtml(d.model || '—')}</div>
+      <tr class="cyber-container" data-id="${escHtml(d.id)}" style="cursor:pointer" title="Click para ver detalles">
+        <td class="canvas">
+          <div class="tracker tr-1"></div><div class="tracker tr-2"></div><div class="tracker tr-3"></div><div class="tracker tr-4"></div><div class="tracker tr-5"></div>
+          <div class="tracker tr-6"></div><div class="tracker tr-7"></div><div class="tracker tr-8"></div><div class="tracker tr-9"></div><div class="tracker tr-10"></div>
+          <div class="tracker tr-11"></div><div class="tracker tr-12"></div><div class="tracker tr-13"></div><div class="tracker tr-14"></div><div class="tracker tr-15"></div>
+          <div class="tracker tr-16"></div><div class="tracker tr-17"></div><div class="tracker tr-18"></div><div class="tracker tr-19"></div><div class="tracker tr-20"></div>
+          <div class="tracker tr-21"></div><div class="tracker tr-22"></div><div class="tracker tr-23"></div><div class="tracker tr-24"></div><div class="tracker tr-25"></div>
         </td>
-        <td>
-          <div class="flex items-center gap-xs">
-            <code style="font-size:0.8rem;color:var(--indigo-light)">${escHtml(d.universitySerial || '—')}</code>
-            ${d.universitySerial ? `<button class="btn btn-ghost btn-icon btn-xs copy-serial-btn" data-serial="${escHtml(d.universitySerial)}" title="Copiar serial universitario">📋</button>` : ''}
-          </div>
-        </td>
-        <td class="td-muted">
-          <div class="flex items-center gap-xs">
-            <span>${escHtml(d.deviceSerial || '—')}</span>
-            ${d.deviceSerial ? `<button class="btn btn-ghost btn-icon btn-xs copy-serial-btn" data-serial="${escHtml(d.deviceSerial)}" title="Copiar serial dispositivo">📋</button>` : ''}
-          </div>
-        </td>
-        <td><span class="badge ${STATUS_CLASS[d.status] || 'badge-default'}">${escHtml(d.status || 'Desconocido')}</span></td>
-        <td class="td-muted" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(d.notes || '')}">
-          ${d.notes ? escHtml(d.notes.slice(0, 60)) + (d.notes.length > 60 ? '…' : '') : '—'}
-        </td>
-        <td class="td-muted">${timeAgo(d.createdAt)}</td>
-        <td class="actions-cell">
-          <div class="flex gap-xs">
-            <button class="btn btn-ghost btn-icon btn-sm view-btn"   data-id="${escHtml(d.id)}" title="Ver detalles">👁️</button>
-            <button class="btn btn-primary btn-icon btn-sm edit-btn" data-id="${escHtml(d.id)}" title="Editar">✏️</button>
-            <button class="btn btn-danger  btn-icon btn-sm del-btn"  data-id="${escHtml(d.id)}" title="Eliminar">🗑️</button>
+        <td id="card" colspan="7">
+          <div class="card-content">
+            <div class="title">${escHtml(d.brand || '—')}<br>${escHtml(d.model || '—')}</div>
+            <div class="subtitle" style="margin-top:10px;">
+              <span>${escHtml(d.type || '—')}</span><br>
+              <span class="highlight">${escHtml(d.status || '—')}</span>
+            </div>
           </div>
         </td>
       </tr>
