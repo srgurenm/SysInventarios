@@ -2,17 +2,20 @@
    CARD COMPONENT (Uiverse/SelfMadeSystem)
    ============================================= */
 
+/* =============================================
+   CARD COMPONENT (Uiverse/SelfMadeSystem)
+   ============================================= */
+
 /* Main container for the grid items */
 .card-container {
   position: relative;
   width: 100%;
-  max-width: 320px;
+  max-width: 300px;
   height: 200px;
   border-radius: 1em;
   margin: 10px;
-  /* Ensure it behaves well in the table layout */
-  display: inline-block;
-  vertical-align: top;
+  display: block;
+  overflow: hidden; /* Important to keep effects contained */
 }
 
 .card-border {
@@ -20,6 +23,7 @@
   inset: 0;
   background: #0005;
   border-radius: inherit;
+  z-index: 1;
 }
 
 .card {
@@ -33,6 +37,7 @@
   overflow: hidden;
   padding: 15px;
   justify-content: center;
+  z-index: 2;
 }
 
 .card-content {
